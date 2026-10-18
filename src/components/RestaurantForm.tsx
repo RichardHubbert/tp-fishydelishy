@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { Restaurant, createRestaurant, updateRestaurant } from '@/services/restaurantService';
 import { supabase } from '@/integrations/supabase/client';
@@ -396,12 +397,10 @@ const RestaurantForm: React.FC<RestaurantFormProps> = ({
                 </div>
                 <div className="flex items-center space-x-2">
                   <span className="text-sm text-gray-600">Off</span>
-                  <input
-                    type="checkbox"
+                  <Switch
                     id="elevenlabs_enabled"
                     checked={formData.elevenlabs_enabled}
-                    onChange={(e) => setFormData(prev => ({ ...prev, elevenlabs_enabled: e.target.checked }))}
-                    className="toggle-switch h-6 w-11 rounded-full"
+                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, elevenlabs_enabled: checked }))}
                   />
                   <span className="text-sm text-gray-600">On</span>
                 </div>
