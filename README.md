@@ -1,12 +1,12 @@
-# Amici Coffee - Table Pilot
+# Fishy Delishy - Table Pilot
 
 ## Project info
 
 **Development URL**: https://lovable.dev/projects/572fb16c-338f-484d-a597-4d5dc1a7a5cc
 
-**Production URL**: https://tablepilot.co.uk/amicicoffee/
+**Production URL**: https://tablepilot.co.uk/fishydelishy/
 
-**Project Name**: Amici Coffee
+**Project Name**: Fishy Delishy
 
 ## Config-Driven Architecture
 

@@ -14,11 +14,11 @@ export const siteConfig = {
   // BUSINESS INFORMATION
   // ============================================
   business: {
-    name: "Amici Coffee",
-    // Short name/acronym shown in logo badge (e.g., "TP" for Table Pilot)
-    logoText: "TP",
+    name: "Fishy Delishy",
+    // Short name/acronym shown in logo badge
+    logoText: "FD",
     // Optional: tagline or description
-    tagline: "Restaurant Table Bookings",
+    tagline: "The Best Fish and Chips",
   },
 
   // ============================================
@@ -28,12 +28,12 @@ export const siteConfig = {
     // Primary brand colors (Tailwind color names)
     // Used for buttons, highlights, and accents throughout the app
     colors: {
-      primary: "amber",      // Main brand color (e.g., amber, blue, green)
+      primary: "sky",      // Main brand color (sea/ocean blue)
       primaryShade: "600",   // Default shade (400-900)
       hover: "700",          // Hover state shade
       light: "300",          // Light accent shade
       lighter: "500",        // Badge/icon shade
-      background: "orange",  // Hero background gradient color
+      background: "blue",  // Hero background gradient color
       backgroundShade: "100",
     },
     
@@ -41,7 +41,7 @@ export const siteConfig = {
     assets: {
       favicon: "/brand/favicon.ico",
       logo: "/brand/logo.png",              // Optional: full logo image
-      heroImage: "/brand/hero.jpg",         // Optional: default hero image (currently using amicicoffee.jpg)
+      heroImage: "/brand/hero.jpg",         // Optional: default hero image
       ogImage: "/brand/og-image.png",       // Optional: Open Graph/social share image
     },
   },
@@ -50,21 +50,22 @@ export const siteConfig = {
   // CONTACT & LOCATION
   // ============================================
   contact: {
-    phone: "+44 20 7946 0958",  // Optional: Default phone (can be overridden per-restaurant in database)
-    email: "info@amicicoffee.com",  // Optional: Default email (can be overridden per-restaurant in database)
-    address: "123 Fine Dining Street, London, UK",  // Optional: Default address
+    phone: "07973 226393",
+    email: "richardhubbert@gmail.com",
+    address: "15 Sand Lane, Northill",
   },
 
   // ============================================
   // OPERATING HOURS
   // ============================================
   hours: {
-    display: "Daily: 11:00 AM - 10:00 PM",
-    lastBooking: "7:30 PM",
+    // TODO: Update with actual Fishy Delishy hours
+    display: "Mon-Sat: 11:30 AM - 2:00 PM, 5:00 PM - 10:00 PM",
+    lastBooking: "9:00 PM",
     // Optional: Add structured hours for future use
     // schedule: {
-    //   monday: { open: "11:00", close: "22:00" },
-    //   tuesday: { open: "11:00", close: "22:00" },
+    //   monday: { open: "11:30", close: "14:00", eveningOpen: "17:00", eveningClose: "22:00" },
+    //   tuesday: { open: "11:30", close: "14:00", eveningOpen: "17:00", eveningClose: "22:00" },
     //   ...
     // }
   },
@@ -73,10 +74,10 @@ export const siteConfig = {
   // SEO & META TAGS
   // ============================================
   seo: {
-    title: "Amici Coffee - Restaurant Table Bookings",
-    description: "Book your table with Amici Coffee. Experience seamless restaurant bookings with our intuitive booking system.",
-    keywords: "restaurant, booking, table reservation, dining, italian coffee, amici coffee",
-    author: "Amici Coffee",
+    title: "Fishy Delishy - Fish and Chips Table Bookings in Northill",
+    description: "Book your table at Fishy Delishy in Northill. The best fish and chips with easy online table reservations.",
+    keywords: "fish and chips, restaurant, booking, table reservation, northill, fishy delishy",
+    author: "Fishy Delishy",
     
     // Open Graph (Facebook, LinkedIn, etc.)
     og: {
@@ -96,11 +97,11 @@ export const siteConfig = {
   // ============================================
   urls: {
     // Production domain (without protocol)
-    domain: "amicicoffee.tablepilot.co.uk",
-    // Base path for the app (e.g., "/amicicoffee" or "/" for root)
-    basePath: "/amicicoffee",
+    domain: "tablepilot.co.uk",
+    // Base path for the app
+    basePath: "/fishydelishy",
     // Full production URL
-    productionUrl: "https://tablepilot.co.uk/amicicoffee/",
+    productionUrl: "https://tablepilot.co.uk/fishydelishy/",
   },
 
   // ============================================
@@ -110,7 +111,7 @@ export const siteConfig = {
     // Hero section copy
     hero: {
       welcome: "Welcome to",  // "Welcome to {business.name}"
-      subtitle: "Experience the perfect blend of Italian tradition and modern comfort. Book your table today and enjoy our authentic coffee and cuisine.",
+      subtitle: "Experience the finest fish and chips in Northill. Book your table today and enjoy our traditional recipes and fresh, locally-sourced ingredients.",
       ctaText: "Book a Table",
     },
     
@@ -151,7 +152,7 @@ export const siteConfig = {
   email: {
     // Default "from" name for booking confirmations
     // Actual email address is set in Supabase secrets (RESEND_FROM)
-    fromName: "Amici Coffee",
+    fromName: "Fishy Delishy",
     defaultFromEmail: "onboarding@resend.dev",  // Fallback only
   },
 
@@ -159,21 +160,25 @@ export const siteConfig = {
   // DATABASE IDS (Client-specific)
   // ============================================
   ids: {
-    // Default business ID for Amici Coffee
+    // TODO: Replace with Fishy Delishy business ID once created in Supabase
+    // Currently using Amici Coffee's ID - needs updating
     businessId: "24e2799f-60d5-4e3b-bb30-b8049c9ae56d",
-    // Default restaurant ID (if applicable)
+    // TODO: Replace with Fishy Delishy restaurant ID once created in Supabase
+    // Currently using Amici Coffee's ID - needs updating
     restaurantId: "24e2799f-60d5-4e3b-bb30-b8049c9ae56d",
-    // Business slug
-    slug: "amicicoffee",
+    // TODO: Update slug to match Fishy Delishy once database is set up
+    slug: "fishydelishy",
   },
 
   // ============================================
-  // ELEVENLABS INTEGRATION
+  // INTEGRATIONS (Client-specific)
   // ============================================
   integrations: {
     elevenlabs: {
+      // TODO: Replace with Fishy Delishy's ElevenLabs agent ID
+      // Currently using Amici Coffee's agent ID - needs updating
       agentId: "hFhNyzsEj0QwywLVdOEQ",
-      enabled: true,
+      enabled: false,  // Disabled until Fishy Delishy agent is set up
     },
   },
 } as const;

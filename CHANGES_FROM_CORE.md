@@ -1,21 +1,26 @@
-# Amici Coffee - Differences from Core
+# Fishy Delishy - Differences from Core
 
-This document outlines what differs between this Amici Coffee client site and the tp-woodman core repository.
+This document outlines what differs between this Fishy Delishy client site and the tp-woodman core repository.
 
 ## 📋 Migration Summary
 
-This site has been migrated to use the config-driven architecture from [tp-woodman](https://github.com/RichardHubbert/tp-woodman). All Amici Coffee-specific values are now centralized in `src/config/site.ts`.
+This site has been migrated to use the config-driven architecture from [tp-woodman](https://github.com/RichardHubbert/tp-woodman). All Fishy Delishy-specific values are now centralized in `src/config/site.ts`.
 
 ## ✅ What Was Migrated
 
 ### Core Configuration Structure
-- ✅ Created `src/config/site.ts` with all Amici Coffee business values
+- ✅ Created `src/config/site.ts` with all Fishy Delishy business values
 - ✅ Created `public/brand/` directory with brand assets
   - `favicon.ico` (from existing `public/favicon.ico`)
-  - `hero.jpg` (from existing `public/amicicoffee.jpg`)
+  - `hero.jpg` (from existing `public/amicicoffee.jpg`, renamed)
 - ✅ Created `.env.example` for environment variable documentation
 - ✅ Copied `CLONING.md` from core (cloning guide)
 - ✅ Copied `scripts/setup-new-client.js` from core
+- ✅ Added core update tooling from tp-woodman PR #2:
+  - `scripts/link-to-core.sh`
+  - `scripts/update-from-core.sh`
+  - `npm run update-from-core` script
+  - `UPDATING.md`
 
 ### Code Updates
 - ✅ Updated all components to use `siteConfig` instead of hardcoded values:
@@ -34,59 +39,85 @@ This site has been migrated to use the config-driven architecture from [tp-woodm
   - `App.tsx` - uses `siteConfig.urls.basePath`
   - `vite.config.ts` - reads base path from config
 - ✅ Updated SEO:
-  - `index.html` - simplified, SEO now injected from config
-  - `main.tsx` - dynamically sets meta tags from config
+  - `index.html` - has static meta tags for crawlers plus dynamic injection
+  - `main.tsx` - dynamically updates meta tags from config
 - ✅ Updated `README.md` to reference config-driven architecture
 
 ## 🔧 Client-Specific Configuration
 
-All Amici Coffee-specific values are in `src/config/site.ts`:
+All Fishy Delishy-specific values are in `src/config/site.ts`:
 
 ```typescript
 {
   business: {
-    name: "Amici Coffee",
-    logoText: "TP",
-    tagline: "Restaurant Table Bookings"
+    name: "Fishy Delishy",
+    logoText: "FD",
+    tagline: "The Best Fish and Chips"
   },
   branding: {
     colors: {
-      primary: "amber",
+      primary: "sky",      // Sea/ocean blue
       primaryShade: "600",
       hover: "700",
-      background: "orange",
+      background: "blue",
       backgroundShade: "100"
     }
   },
   contact: {
-    phone: "+44 20 7946 0958",
-    email: "info@amicicoffee.com",
-    address: "123 Fine Dining Street, London, UK"
+    phone: "07973 226393",
+    email: "richardhubbert@gmail.com",
+    address: "15 Sand Lane, Northill"
   },
   urls: {
-    domain: "amicicoffee.tablepilot.co.uk",
-    basePath: "/amicicoffee",
-    productionUrl: "https://tablepilot.co.uk/amicicoffee/"
+    domain: "tablepilot.co.uk",
+    basePath: "/fishydelishy",
+    productionUrl: "https://tablepilot.co.uk/fishydelishy/"
   },
-  ids: {
-    businessId: "24e2799f-60d5-4e3b-bb30-b8049c9ae56d",
-    restaurantId: "24e2799f-60d5-4e3b-bb30-b8049c9ae56d",
-    slug: "amicicoffee"
-  },
-  integrations: {
-    elevenlabs: {
-      agentId: "hFhNyzsEj0QwywLVdOEQ",
-      enabled: true
-    }
+  // ... other config
+}
+```
+
+## ⚠️ TODO: Integration IDs Need Updating
+
+The following IDs in `src/config/site.ts` currently point to **Amici Coffee's** data and need to be replaced with Fishy Delishy's own values:
+
+### Database IDs (`siteConfig.ids`)
+```typescript
+ids: {
+  // TODO: Replace with Fishy Delishy business ID once created in Supabase
+  businessId: "24e2799f-60d5-4e3b-bb30-b8049c9ae56d",  // Currently Amici Coffee's ID
+  
+  // TODO: Replace with Fishy Delishy restaurant ID once created in Supabase
+  restaurantId: "24e2799f-60d5-4e3b-bb30-b8049c9ae56d",  // Currently Amici Coffee's ID
+  
+  // TODO: Update slug when database is set up (may already be correct)
+  slug: "fishydelishy",
+}
+```
+
+### ElevenLabs Integration (`siteConfig.integrations.elevenlabs`)
+```typescript
+integrations: {
+  elevenlabs: {
+    // TODO: Replace with Fishy Delishy's ElevenLabs agent ID
+    agentId: "hFhNyzsEj0QwywLVdOEQ",  // Currently Amici Coffee's agent ID
+    enabled: false,  // Disabled until Fishy Delishy agent is set up
   }
 }
 ```
 
+### Steps to Update:
+1. Create Fishy Delishy business in Supabase `businesses` table
+2. Create Fishy Delishy restaurant in Supabase `restaurants` table
+3. Update `businessId` and `restaurantId` in `src/config/site.ts`
+4. If using ElevenLabs: create Fishy Delishy agent and update `agentId`
+5. Set `elevenlabs.enabled: true` when ready
+
 ## 🎨 Client-Specific Features
 
-These features exist in Amici Coffee but are NOT in the core (yet):
+These features exist in Fishy Delishy but are NOT in the core (yet):
 
-1. **ElevenLabs AI Voice Assistant**
+1. **ElevenLabs AI Voice Assistant** (currently disabled, pending setup)
    - Configured in `siteConfig.integrations.elevenlabs`
    - Dynamically loaded in `main.tsx`
    - Widget styling in `index.html`
@@ -117,7 +148,7 @@ These features exist in Amici Coffee but are NOT in the core (yet):
 
 5. **Legacy Assets**
    - `public/lovable-uploads/*.png` - Uploaded restaurant images
-   - `public/amicicoffee.jpg` - Original hero image (now also at `public/brand/hero.jpg`)
+   - `public/amicicoffee.jpg` - Original hero image (keep for reference)
 
 ## 🔄 Future Core Updates
 
@@ -132,18 +163,19 @@ These should match the core and can be updated:
 - Build configuration (`tailwind.config.ts`, `tsconfig.json`, etc.)
 
 ### ⚠️ Merge Carefully (Client-Customized)
-These may have Amici-specific logic:
-- `src/config/site.ts` - **NEVER merge**, client-specific
-- `public/brand/*` - **NEVER merge**, client-specific assets
+These may have Fishy Delishy-specific logic:
+- `src/config/site.ts` - **NEVER merge**, client-specific (protected by .gitattributes)
+- `public/brand/*` - **NEVER merge**, client-specific assets (protected by .gitattributes)
 - CRM-related files - client-specific feature
 - Multi-business database logic - may differ from core
 
-### 📝 Files to Add from Core (In-Progress PR)
-The core is adding these files in a PR - add them when ready:
+### 📝 Core Update Tooling
+Now included from tp-woodman PR #2:
 - `.gitattributes` - Merge strategy for `site.ts` and `public/brand/**`
 - `scripts/link-to-core.sh` - Script to add core as git remote
 - `scripts/update-from-core.sh` - Script to pull updates from core
-- `UPDATING.md` - Guide for updating from core
+- `npm run update-from-core` - npm script wrapper
+- `UPDATING.md` - Complete guide for updating from core
 
 ## 🐛 Potential Issues
 
@@ -161,15 +193,17 @@ Some components use template literals for Tailwind classes (e.g., `text-${primar
 className={`text-${primary}-${primaryShade}`}
 
 // Better:
-className={primary === 'amber' ? 'text-amber-600' : 'text-blue-600'}
+className={primary === 'sky' ? 'text-sky-600' : 'text-blue-600'}
 
 // Or use cn() helper:
 className={cn(
   'text-600',
-  primary === 'amber' && 'text-amber-600',
+  primary === 'sky' && 'text-sky-600',
   primary === 'blue' && 'text-blue-600'
 )}
 ```
+
+Since Fishy Delishy now uses `sky` (not `amber`), this may need attention if styling doesn't appear correctly.
 
 ## 📦 Build Status
 
@@ -180,42 +214,47 @@ className={cn(
 
 ## 📚 Documentation
 
-- ✅ `README.md` - Updated with config-driven info
+- ✅ `README.md` - Updated with Fishy Delishy info and config-driven architecture
 - ✅ `CLONING.md` - Guide for duplicating this site
 - ✅ `.env.example` - Environment variable template
 - ✅ `CHANGES_FROM_CORE.md` - This file
+- ✅ `UPDATING.md` - Guide for updating from core
 - 📋 `CRM_INTEGRATION_SETUP.md` - CRM webhook setup (client-specific)
 - 📋 `NEW_CUSTOMER_CRM_INTEGRATION.md` - Customer CRM docs (client-specific)
 
 ## 🚀 Next Steps
 
-To fully align with the core update workflow:
+To fully set up Fishy Delishy:
 
-1. **Add .gitattributes** (when available from core PR):
-   ```
-   src/config/site.ts merge=ours
-   public/brand/** merge=ours
-   ```
+1. **Update Integration IDs** (see TODO section above):
+   - Create Fishy Delishy business and restaurant in Supabase
+   - Update IDs in `src/config/site.ts`
+   - Set up ElevenLabs agent if needed
 
-2. **Link to Core Repository**:
+2. **Link to Core Repository** (already have the tooling):
    ```bash
-   git remote add core https://github.com/RichardHubbert/tp-woodman.git
-   git fetch core
+   npm run link-to-core
+   # or manually:
+   bash scripts/link-to-core.sh
    ```
 
-3. **Set Up Update Workflow**:
-   - Copy `scripts/update-from-core.sh` from core (when available)
-   - Document update process in `UPDATING.md`
+3. **Test Dynamic Tailwind Classes**:
+   - Check if sky/blue colors render correctly
+   - Add to safelist if needed
 
-4. **Fix Dynamic Tailwind Classes** (if styling breaks):
-   - Review all components using template literal classes
-   - Replace with conditional or safelist approach
+4. **Update Brand Assets**:
+   - Replace `public/brand/favicon.ico` with Fishy Delishy favicon
+   - Replace `public/brand/hero.jpg` with Fishy Delishy hero image
+   - Add `public/brand/logo.png` if available
+   - Add `public/brand/og-image.png` for social sharing
 
 ## ✨ Summary
 
-This site is now fully config-driven and ready to receive updates from the core tp-woodman repository. All Amici Coffee-specific values are in one place (`src/config/site.ts`), making it easy to:
+This site is now fully config-driven and ready to receive updates from the core tp-woodman repository. All Fishy Delishy-specific values are in one place (`src/config/site.ts`), making it easy to:
 
 - Clone this for new clients
 - Update shared features from core
 - Maintain client-specific customizations
 - Keep branding and business logic separate
+
+**Important**: Remember to update the TODO integration IDs before deploying to production!
