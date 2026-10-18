@@ -12,6 +12,7 @@ import { fetchRestaurants, Restaurant } from '@/services/restaurantService';
 import { testEmailService } from '@/services/emailService';
 import CRMTestButton from '@/components/CRMTestButton';
 import NewCustomerCRMTestButton from '@/components/NewCustomerCRMTestButton';
+import DashboardRestaurants from '@/components/DashboardRestaurants';
 
 const AdminDashboard = () => {
   const { isAdmin } = useAdmin();
@@ -222,10 +223,9 @@ const AdminDashboard = () => {
     setActionLoading(true);
     setEmailTestResult(null);
     try {
-      console.log('🧪 Testing EmailJS service...');
       const result = await testEmailService();
       if (result.success) {
-        setEmailTestResult('✅ Email test successful! Check your EmailJS dashboard for the test email.');
+        setEmailTestResult('✅ Email test successful! Check richardhubbert@gmail.com for the test email.');
       } else {
         setEmailTestResult(`❌ Email test failed: ${result.error}`);
       }
@@ -585,39 +585,7 @@ const AdminDashboard = () => {
           </Card>
         </div>
 
-        {/* Restaurant Management Section - Only for Admin */}
-        {isAdmin && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Building2 className="h-5 w-5" />
-                Restaurant Management
-              </CardTitle>
-              <CardDescription>
-                Manage restaurants in the system. Add, edit, or remove restaurants.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 mb-2">
-                    Manage all restaurants that appear in the restaurant selector dropdown.
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    Only visible to admin users (richardhubbert@gmail.com)
-                  </p>
-                </div>
-                <Button 
-                  onClick={() => window.location.href = '/restaurants'}
-                  className="flex items-center gap-2"
-                >
-                  <Building2 className="h-4 w-4" />
-                  Manage Restaurants
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        <DashboardRestaurants />
 
         {/* User Management Section - Only for Admin */}
         {isAdmin && (

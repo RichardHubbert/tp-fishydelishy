@@ -265,17 +265,41 @@ export type Database = {
           },
         ]
       }
+      restaurant_categories: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       restaurants: {
         Row: {
           address: string
           business_id: string | null
+          category_id: string | null
+          county: string | null
           created_at: string | null
           cuisine: string
           description: string | null
           email: string | null
+          elevenlabs_agent_id: string | null
+          elevenlabs_enabled: boolean
+          hero_image_url: string | null
           id: string
           image_url: string | null
           is_active: boolean | null
+          is_default: boolean
           name: string
           opening_hours: Json | null
           phone: string | null
@@ -285,13 +309,19 @@ export type Database = {
         Insert: {
           address: string
           business_id?: string | null
+          category_id?: string | null
+          county?: string | null
           created_at?: string | null
           cuisine: string
           description?: string | null
           email?: string | null
+          elevenlabs_agent_id?: string | null
+          elevenlabs_enabled?: boolean
+          hero_image_url?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean | null
+          is_default?: boolean
           name: string
           opening_hours?: Json | null
           phone?: string | null
@@ -301,13 +331,19 @@ export type Database = {
         Update: {
           address?: string
           business_id?: string | null
+          category_id?: string | null
+          county?: string | null
           created_at?: string | null
           cuisine?: string
           description?: string | null
           email?: string | null
+          elevenlabs_agent_id?: string | null
+          elevenlabs_enabled?: boolean
+          hero_image_url?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean | null
+          is_default?: boolean
           name?: string
           opening_hours?: Json | null
           phone?: string | null
