@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { fetchTables, fetchAllBookings, getNextReservationForTable, type Table as TableType, type Booking, updateBooking, deleteBooking } from '@/services/supabaseBookingService';
 import { useAdmin } from '@/hooks/useAdmin';
 import { Dialog, DialogContent, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -13,9 +14,11 @@ import { testEmailService } from '@/services/emailService';
 import CRMTestButton from '@/components/CRMTestButton';
 import NewCustomerCRMTestButton from '@/components/NewCustomerCRMTestButton';
 import DashboardRestaurants from '@/components/DashboardRestaurants';
+import TimelineView from '@/components/TimelineView';
 
 const AdminDashboard = () => {
   const { isAdmin } = useAdmin();
+  const [selectedView, setSelectedView] = useState<string>('timeline'); // Default to timeline view
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [tables, setTables] = useState<TableType[]>([]);
   const [allBookings, setAllBookings] = useState<Booking[]>([]);
@@ -187,6 +190,20 @@ const AdminDashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto space-y-6 p-4">
+        {/* View Tabs */}
+        <Tabs value={selectedView} onValueChange={setSelectedView} className="w-full">
+          <TabsList className="grid w-full max-w-md mx-auto grid-cols-2">
+            <TabsTrigger value="timeline">Timeline View</TabsTrigger>
+            <TabsTrigger value="list">List View</TabsTrigger>
+          </TabsList>
+
+          {/* Timeline View Tab */}
+          <TabsContent value="timeline" className="mt-6">
+            <TimelineView />
+          </TabsContent>
+
+          {/* List View Tab */}
+          <TabsContent value="list" className="mt-6 space-y-6">
         {/* Date Selector */}
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
@@ -535,6 +552,8 @@ const AdminDashboard = () => {
             </CardContent>
           </Card>
         )}
+          </TabsContent>
+        </Tabs>
       </div>
       {/* Edit Booking Modal */}
       <Dialog open={!!editingBooking} onOpenChange={open => !open && setEditingBooking(null)}>
