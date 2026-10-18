@@ -14,7 +14,7 @@ export const siteConfig = {
   // BUSINESS INFORMATION
   // ============================================
   business: {
-    name: "Your Restaurant Name", // TODO: Replace with your restaurant name
+    name: "Restaurant Name ...", // TODO: Replace with your restaurant name
     // Short name/acronym shown in logo badge (e.g., "TP" for Table Pilot)
     logoText: "TP", // TODO: Replace with your restaurant initials or badge text
     // Optional: tagline or description
@@ -73,10 +73,10 @@ export const siteConfig = {
   // SEO & META TAGS
   // ============================================
   seo: {
-    title: "Your Restaurant Name - Table Bookings", // TODO: Update with your restaurant name
+    title: "Restaurant Name ... - Table Bookings", // TODO: Update with your restaurant name
     description: "Book your table online. Choose your date, time, and party size.", // TODO: Update with your description
     keywords: "restaurant, booking, table reservation, dining",
-    author: "Your Restaurant Name", // TODO: Update with your restaurant name
+    author: "Restaurant Name ...", // TODO: Update with your restaurant name
     
     // Open Graph (Facebook, LinkedIn, etc.)
     og: {
@@ -96,11 +96,11 @@ export const siteConfig = {
   // ============================================
   urls: {
     // Production domain (without protocol)
-    domain: "yourdomain.com", // TODO: Update with your domain
+    domain: "tablepilot.co.uk",
     // Base path for the app (e.g., "/yourrestaurant" or "/" for root)
-    basePath: "/", // TODO: Update if deploying to a subdirectory
+    basePath: "/tpCore",
     // Full production URL
-    productionUrl: "https://yourdomain.com/", // TODO: Update with your full production URL
+    productionUrl: "https://tablepilot.co.uk/tpCore/",
   },
 
   // ============================================
@@ -110,7 +110,7 @@ export const siteConfig = {
     // Hero section copy
     hero: {
       welcome: "Welcome to",  // "Welcome to {business.name}"
-      subtitle: "Book a table at {name}. Choose your date, time, and party size.",
+      subtitle: "Choose your date, time, and party size.",
       ctaText: "Book a Table",
     },
     
@@ -151,7 +151,7 @@ export const siteConfig = {
   email: {
     // Default "from" name for booking confirmations
     // Actual email address is set in Supabase secrets (RESEND_FROM)
-    fromName: "Your Restaurant Name", // TODO: Update with your restaurant name
+    fromName: "Restaurant Name ...", // TODO: Update with your restaurant name
     defaultFromEmail: "onboarding@resend.dev",  // Fallback only (use your verified domain in production)
   },
 } as const;

@@ -1,6 +1,5 @@
 RewriteEngine On
-# TODO: Update RewriteBase to match your deployment path (e.g., /yourrestaurant/ or / for root)
-RewriteBase /
+RewriteBase /tpCore/
 
 RewriteRule ^index\.html$ - [L]
 
@@ -10,8 +9,7 @@ RewriteRule \.(?:css|js|mjs|map|json|png|jpe?g|gif|svg|webp|ico|woff2?|ttf|eot)$
 
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-# TODO: Update this path to match your RewriteBase
-RewriteRule . /index.html [L]
+RewriteRule . /tpCore/index.html [L]
 
 # Enable CORS
 Header set Access-Control-Allow-Origin "*"

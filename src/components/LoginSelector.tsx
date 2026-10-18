@@ -57,10 +57,10 @@ const LoginSelector = () => {
     const checkUserRole = async (userId: string) => {
       try {
         const { data: profile, error } = await supabase
-          .from('profiles')
+          .from('user_roles')
           .select('role')
           .eq('user_id', userId)
-          .single();
+          .maybeSingle();
 
         if (error) {
           console.log('No profile found, defaulting to home page');

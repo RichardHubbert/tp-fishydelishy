@@ -5,25 +5,20 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { fetchTables, fetchAllBookings, getNextReservationForTable, type Table as TableType, type Booking, updateBooking, deleteBooking } from '@/services/supabaseBookingService';
+import { fetchTables, fetchAllBookings, getNextReservationForTable, type Table as TableType, type Booking, updateBooking, deleteBooking, placeBooking } from '@/services/supabaseBookingService';
 import { useAdmin } from '@/hooks/useAdmin';
 import { Dialog, DialogContent, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { fetchRestaurants, Restaurant } from '@/services/restaurantService';
-import { testEmailService } from '@/services/emailService';
-import CRMTestButton from '@/components/CRMTestButton';
-import NewCustomerCRMTestButton from '@/components/NewCustomerCRMTestButton';
 import DashboardRestaurants from '@/components/DashboardRestaurants';
-import TimelineView from '@/components/TimelineView';
+import BookingTimeline from '@/components/BookingTimeline';
+import BookingModal from '@/components/BookingModal';
 
 const AdminDashboard = () => {
   const { isAdmin } = useAdmin();
-  const [selectedView, setSelectedView] = useState<string>('timeline'); // Default to timeline view
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [tables, setTables] = useState<TableType[]>([]);
   const [allBookings, setAllBookings] = useState<Booking[]>([]);
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
-  const [selectedCounty, setSelectedCounty] = useState<string>('');
   const [selectedRestaurant, setSelectedRestaurant] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -33,7 +28,7 @@ const AdminDashboard = () => {
   const [actionLoading, setActionLoading] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [editError, setEditError] = useState<string | null>(null);
-  const [emailTestResult, setEmailTestResult] = useState<string | null>(null);
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -62,28 +57,9 @@ const AdminDashboard = () => {
     loadData();
   }, []);
 
-  // Get filtered bookings based on selected county and restaurant
   const getFilteredBookings = () => {
-    let filtered = allBookings;
-
-    if (selectedCounty) {
-      filtered = filtered.filter(booking => {
-        const restaurant = restaurants.find(r => r.id === booking.restaurant_id);
-        return restaurant?.county === selectedCounty;
-      });
-    }
-
-    if (selectedRestaurant) {
-      filtered = filtered.filter(booking => booking.restaurant_id === selectedRestaurant);
-    }
-
-    return filtered;
-  };
-
-  // Get restaurants filtered by county
-  const getFilteredRestaurants = () => {
-    if (!selectedCounty) return restaurants;
-    return restaurants.filter(r => r.county === selectedCounty);
+    if (!selectedRestaurant) return allBookings;
+    return allBookings.filter(booking => booking.restaurant_id === selectedRestaurant);
   };
 
   // Get bookings for selected date
@@ -149,22 +125,9 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleTestEmail = async () => {
-    setActionLoading(true);
-    setEmailTestResult(null);
-    try {
-      const result = await testEmailService();
-      if (result.success) {
-        setEmailTestResult('✅ Email test successful! Check richardhubbert@gmail.com for the test email.');
-      } else {
-        setEmailTestResult(`❌ Email test failed: ${result.error}`);
-      }
-    } catch (err: any) {
-      console.error('Email test error:', err);
-      setEmailTestResult(`❌ Email test error: ${err?.message || 'Unknown error'}`);
-    } finally {
-      setActionLoading(false);
-    }
+  const refreshBookings = async () => {
+    const bookingsData = await fetchAllBookings();
+    setAllBookings(bookingsData);
   };
 
   if (loading) {
@@ -190,67 +153,18 @@ const AdminDashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto space-y-6 p-4">
-        {/* View Tabs */}
-        <Tabs value={selectedView} onValueChange={setSelectedView} className="w-full">
-          <TabsList className="grid w-full max-w-md mx-auto grid-cols-2">
-            <TabsTrigger value="timeline">Timeline View</TabsTrigger>
-            <TabsTrigger value="list">List View</TabsTrigger>
-          </TabsList>
-
-          {/* Timeline View Tab */}
-          <TabsContent value="timeline" className="mt-6">
-            <TimelineView />
-          </TabsContent>
-
-          {/* List View Tab */}
-          <TabsContent value="list" className="mt-6 space-y-6">
         {/* Date Selector */}
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
             <h2 className="text-xl font-semibold text-gray-700">Bookings Overview</h2>
             
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-              {/* County Filter */}
-              <div className="flex items-center gap-3 border rounded-lg p-3 bg-white shadow-sm">
-                <select
-                  value={selectedCounty}
-                  onChange={(e) => {
-                    setSelectedCounty(e.target.value);
-                    setSelectedRestaurant(''); // Reset restaurant when county changes
-                  }}
-                  className="border-none focus:ring-0 p-0 text-gray-800"
-                >
-                  <option value="">All Counties</option>
-                  <option value="Bedfordshire">Bedfordshire</option>
-                  <option value="Cambridgeshire">Cambridgeshire</option>
-                  <option value="Hertfordshire">Hertfordshire</option>
-                </select>
-              </div>
-
-              {/* Restaurant Filter */}
-              <div className="flex items-center gap-3 border rounded-lg p-3 bg-white shadow-sm">
-                <select
-                  value={selectedRestaurant}
-                  onChange={(e) => setSelectedRestaurant(e.target.value)}
-                  className="border-none focus:ring-0 p-0 text-gray-800"
-                  disabled={!selectedCounty}
-                >
-                  <option value="">All Restaurants</option>
-                  {getFilteredRestaurants().map(restaurant => (
-                    <option key={restaurant.id} value={restaurant.id}>
-                      {restaurant.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
               <div className="flex items-center gap-3 border rounded-lg p-3 bg-white shadow-sm">
                 <Calendar className="h-5 w-5 text-gray-500" />
                 <input
                   type="date"
                   value={format(selectedDate, 'yyyy-MM-dd')}
                   onChange={(e) => setSelectedDate(new Date(e.target.value))}
-                  min={format(new Date(), 'yyyy-MM-dd')}
                   className="border-none focus:ring-0 p-0 text-gray-800"
                 />
               </div>
@@ -316,40 +230,47 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        {/* Email Test Section */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-700">Email Service Test</h3>
-            <Button 
-              onClick={handleTestEmail} 
-              disabled={actionLoading}
-              variant="outline"
-              className="flex items-center gap-2"
-            >
-              {actionLoading ? 'Testing...' : 'Test Email Service'}
-            </Button>
-          </div>
-          {emailTestResult && (
-            <div className={`p-3 rounded-lg ${
-              emailTestResult.includes('✅') 
-                ? 'bg-green-50 border border-green-200 text-green-800' 
-                : 'bg-red-50 border border-red-200 text-red-800'
-            }`}>
-              {emailTestResult}
-            </div>
-          )}
-        </div>
-
-        {/* CRM Integration Test Section */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-700">CRM Integration Test</h3>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <CRMTestButton />
-            <NewCustomerCRMTestButton />
-          </div>
-        </div>
+        <BookingTimeline
+          date={selectedDate}
+          onDateChange={setSelectedDate}
+          tables={tables}
+          bookings={dayBookings}
+          schedule={allBookings}
+          restaurants={restaurants}
+          selectedRestaurantId={selectedRestaurant}
+          onRestaurantChange={setSelectedRestaurant}
+          onNewBooking={() => setIsBookingModalOpen(true)}
+          onMoveBooking={async (booking, update) => {
+            await updateBooking(booking.id, {
+              table_id: update.tableId,
+              start_time: update.startTime,
+              end_time: update.endTime,
+            });
+            await refreshBookings();
+          }}
+          onSaveBooking={async (booking, update) => {
+            await updateBooking(booking.id, update);
+            await refreshBookings();
+          }}
+          onAcceptRequest={async (request, slot) => {
+            const [hours, minutes] = slot.time.split(':').map(Number);
+            const endTotal = hours * 60 + minutes + request.duration_minutes;
+            const endTime = `${String(Math.floor(endTotal / 60)).padStart(2, '0')}:${String(endTotal % 60).padStart(2, '0')}:00`;
+            await placeBooking({
+              restaurantId: request.restaurant_id || selectedRestaurant || restaurants[0]?.id,
+              tableId: slot.tableId,
+              date: request.booking_date,
+              startTime: `${slot.time}:00`,
+              endTime,
+              partySize: request.party_size,
+              customerName: request.customer_name,
+              customerEmail: request.customer_email,
+              customerPhone: request.customer_phone,
+              specialRequests: request.notes,
+            });
+            await refreshBookings();
+          }}
+        />
 
         {/* Tables Overview */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -436,15 +357,13 @@ const AdminDashboard = () => {
               <CardTitle>Today's Bookings</CardTitle>
               <CardDescription>
                 Detailed view of all bookings for {format(selectedDate, 'MMM do, yyyy')}
-                {selectedCounty && ` in ${selectedCounty}`}
-                {selectedRestaurant && ` at ${restaurants.find(r => r.id === selectedRestaurant)?.name}`}
               </CardDescription>
             </CardHeader>
             <CardContent>
               {dayBookings.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
                   <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>No bookings for this date{getFilteredBookings().length === 0 ? ' and selected filters' : ''}.</p>
+                  <p>No bookings for this date.</p>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -552,8 +471,6 @@ const AdminDashboard = () => {
             </CardContent>
           </Card>
         )}
-          </TabsContent>
-        </Tabs>
       </div>
       {/* Edit Booking Modal */}
       <Dialog open={!!editingBooking} onOpenChange={open => !open && setEditingBooking(null)}>
@@ -626,6 +543,16 @@ const AdminDashboard = () => {
           {deleteError && <div className="text-red-600 text-sm mt-2">{deleteError}</div>}
         </DialogContent>
       </Dialog>
+
+      <BookingModal
+        isOpen={isBookingModalOpen}
+        onClose={() => {
+          setIsBookingModalOpen(false);
+          refreshBookings().catch((err) => console.error('Failed to refresh bookings', err));
+        }}
+        restaurant={restaurants.find((restaurant) => restaurant.id === selectedRestaurant) || restaurants[0]}
+        initialDate={format(selectedDate, 'yyyy-MM-dd')}
+      />
     </div>
   );
 };

@@ -352,3 +352,41 @@ export const updateBooking = async (id: string, updates: Partial<Booking>): Prom
   }
   return data as Booking;
 };
+
+export const placeBooking = async (booking: {
+  restaurantId?: string;
+  tableId: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  partySize: number;
+  customerName: string;
+  customerEmail: string;
+  customerPhone?: string;
+  specialRequests?: string;
+}): Promise<Booking> => {
+  const { data, error } = await supabase
+    .from('bookings')
+    .insert({
+      table_id: booking.tableId,
+      restaurant_id: booking.restaurantId || null,
+      customer_name: booking.customerName,
+      customer_email: booking.customerEmail,
+      customer_phone: booking.customerPhone || null,
+      booking_date: booking.date,
+      start_time: booking.startTime,
+      end_time: booking.endTime,
+      party_size: booking.partySize,
+      status: 'confirmed',
+      special_requests: booking.specialRequests || null,
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error placing booking:', error);
+    throw error;
+  }
+
+  return data as Booking;
+};

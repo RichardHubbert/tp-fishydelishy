@@ -47,7 +47,7 @@ const Index = () => {
     openBooking();
   };
 
-  const restaurantName = restaurant?.name || siteConfig.business.name;
+  const restaurantName = siteConfig.business.name;
 
   return (
     <div className="min-h-screen bg-background">
@@ -69,7 +69,6 @@ const Index = () => {
       <HeroSection
         onBookTable={openBooking}
         restaurantName={restaurantName}
-        imageUrl={restaurant?.hero_image_url || undefined}
       />
       <TableSizesSection />
       <RestaurantInfoSection

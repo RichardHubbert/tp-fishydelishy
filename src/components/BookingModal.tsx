@@ -21,6 +21,7 @@ import BookingConfirmation from '@/components/BookingConfirmation';
 import { createBooking } from '@/services/supabaseBookingService';
 import { sendBookingConfirmationEmail } from '@/services/emailService';
 import { fetchRestaurants, Restaurant } from '@/services/restaurantService';
+import { siteConfig } from '@/config/site';
 
 interface BookingModalProps {
   isOpen: boolean;
@@ -238,7 +239,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, restaurant
         return (
           <BookingConfirmation
             bookingData={bookingData as BookingData}
-            restaurantName={restaurant?.name}
+            restaurantName={siteConfig.business.name}
             onClose={handleClose}
           />
         );
@@ -252,7 +253,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, restaurant
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-center">
-            {restaurant?.name ? `Reserve a table at ${restaurant.name}` : 'Reserve Your Table'}
+            {`Reserve a table at ${siteConfig.business.name}`}
           </DialogTitle>
         </DialogHeader>
 
