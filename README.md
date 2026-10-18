@@ -10,7 +10,7 @@
 
 ## Config-Driven Architecture
 
-This project has been migrated to use the config-driven layout from [tp-woodman](https://github.com/RichardHubbert/tp-woodman). All client-specific values are centralized in `src/config/site.ts`.
+This project has been migrated to use the config-driven layout from [tp-core](https://github.com/RichardHubbert/tp-core). All client-specific values are centralized in `src/config/site.ts`.
 
 ### Key Configuration
 

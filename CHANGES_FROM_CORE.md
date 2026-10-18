@@ -1,10 +1,10 @@
 # Fishy Delishy - Differences from Core
 
-This document outlines what differs between this Fishy Delishy client site and the tp-woodman core repository.
+This document outlines what differs between this Fishy Delishy client site and the tp-core repository.
 
 ## 📋 Migration Summary
 
-This site has been migrated to use the config-driven architecture from [tp-woodman](https://github.com/RichardHubbert/tp-woodman). All Fishy Delishy-specific values are now centralized in `src/config/site.ts`.
+This site has been migrated to use the config-driven architecture from [tp-core](https://github.com/RichardHubbert/tp-core). All Fishy Delishy-specific values are now centralized in `src/config/site.ts`.
 
 ## ✅ What Was Migrated
 
@@ -16,7 +16,7 @@ This site has been migrated to use the config-driven architecture from [tp-woodm
 - ✅ Created `.env.example` for environment variable documentation
 - ✅ Copied `CLONING.md` from core (cloning guide)
 - ✅ Copied `scripts/setup-new-client.js` from core
-- ✅ Added core update tooling from tp-woodman PR #2:
+- ✅ Added core update tooling from tp-core:
   - `scripts/link-to-core.sh`
   - `scripts/update-from-core.sh`
   - `npm run update-from-core` script
@@ -152,7 +152,7 @@ These features exist in Fishy Delishy but are NOT in the core (yet):
 
 ## 🔄 Future Core Updates
 
-When updating from the core tp-woodman repository:
+When updating from the core tp-core repository:
 
 ### ✅ Safe to Merge (Shared Code)
 These should match the core and can be updated:
@@ -170,7 +170,7 @@ These may have Fishy Delishy-specific logic:
 - Multi-business database logic - may differ from core
 
 ### 📝 Core Update Tooling
-Now included from tp-woodman PR #2:
+Now included from tp-core:
 - `.gitattributes` - Merge strategy for `site.ts` and `public/brand/**`
 - `scripts/link-to-core.sh` - Script to add core as git remote
 - `scripts/update-from-core.sh` - Script to pull updates from core
@@ -250,7 +250,7 @@ To fully set up Fishy Delishy:
 
 ## ✨ Summary
 
-This site is now fully config-driven and ready to receive updates from the core tp-woodman repository. All Fishy Delishy-specific values are in one place (`src/config/site.ts`), making it easy to:
+This site is now fully config-driven and ready to receive updates from the core tp-core repository. All Fishy Delishy-specific values are in one place (`src/config/site.ts`), making it easy to:
 
 - Clone this for new clients
 - Update shared features from core
