@@ -28,7 +28,7 @@ export const siteConfig = {
     // Primary brand colors (Tailwind color names)
     // Used for buttons, highlights, and accents throughout the app
     colors: {
-      primary: "sky",      // Main brand color (sea/ocean blue)
+      primary: "blue",      // Main brand color
       primaryShade: "600",   // Default shade (400-900)
       hover: "700",          // Hover state shade
       light: "300",          // Light accent shade
@@ -59,13 +59,13 @@ export const siteConfig = {
   // OPERATING HOURS
   // ============================================
   hours: {
-    // TODO: Update with actual Fishy Delishy hours
-    display: "Mon-Sat: 11:30 AM - 2:00 PM, 5:00 PM - 10:00 PM",
-    lastBooking: "9:00 PM",
+    // TODO: Confirm actual Fishy Delishy hours
+    display: "Daily: 9:00 AM - 11:00 PM",
+    lastBooking: "10:00 PM",  // TODO: Confirm last booking time
     // Optional: Add structured hours for future use
     // schedule: {
-    //   monday: { open: "11:30", close: "14:00", eveningOpen: "17:00", eveningClose: "22:00" },
-    //   tuesday: { open: "11:30", close: "14:00", eveningOpen: "17:00", eveningClose: "22:00" },
+    //   monday: { open: "09:00", close: "23:00" },
+    //   tuesday: { open: "09:00", close: "23:00" },
     //   ...
     // }
   },
