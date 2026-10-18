@@ -1,10 +1,16 @@
 RewriteEngine On
-RewriteBase /amicicoffee/
+RewriteBase /fishydelishy/
+
 RewriteRule ^index\.html$ - [L]
+
+# Serve real stylesheets and scripts. Rewriting them to index.html makes the
+# browser refuse the file because the response is HTML.
+RewriteRule \.(?:css|js|mjs|map|json|png|jpe?g|gif|svg|webp|ico|woff2?|ttf|eot)$ - [L]
+
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME} !-l
-RewriteRule . /amicicoffee/index.html [L]
+RewriteRule . /fishydelishy/index.html [L]
 
 # Enable CORS
 Header set Access-Control-Allow-Origin "*"
@@ -31,7 +37,7 @@ Header set X-XSS-Protection "1; mode=block"
 # Handle React Router - redirect all requests to index.html except for existing files
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^(.*)$ /amicicoffee/index.html [QSA,L]
+RewriteRule ^(.*)$ /fishydelishy/index.html [QSA,L]
 
 # Set correct MIME types for modern web assets
 <IfModule mod_mime.c>

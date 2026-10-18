@@ -8,7 +8,7 @@
 
 set -e
 
-# Core repository URL - change this if the core repo is renamed
+# Core repository URL - this points to the neutral template repository
 CORE_REPO_URL="https://github.com/RichardHubbert/tp-core.git"
 
 echo "🔗 Linking to upstream core repository..."

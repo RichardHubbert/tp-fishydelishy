@@ -9,6 +9,7 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
+    "new-client": "node scripts/setup-new-client.js",
     "update-from-core": "bash scripts/update-from-core.sh"
   },
   "dependencies": {
