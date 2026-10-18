@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle, Calendar, Clock, Users, Mail, Phone, MessageSquare, MapPin } from 'lucide-react';
 import { format, parseISO, addMinutes } from 'date-fns';
 import { BookingData } from '@/components/BookingModal';
+import { siteConfig } from '@/config/site';
 
 interface BookingConfirmationProps {
   bookingData: BookingData;
@@ -95,7 +96,7 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({ bookingData, 
               <MapPin className="h-5 w-5 text-green-600" />
               <div>
                 <p className="font-medium text-green-800">Location</p>
-                <p className="text-green-700">Amici Coffee</p>
+                <p className="text-green-700">{siteConfig.business.name}</p>
               </div>
             </div>
           </div>

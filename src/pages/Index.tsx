@@ -5,6 +5,7 @@ import HeroSection from '@/components/HeroSection';
 import TableSizesSection from '@/components/TableSizesSection';
 import RestaurantInfoSection from '@/components/RestaurantInfoSection';
 import TopFilterBar from '@/components/TopFilterBar';
+import ElevenLabsWidget from '@/components/ElevenLabsWidget';
 import { useAuth } from '@/hooks/useAuth';
 import { fetchRestaurants, Restaurant } from '@/services/restaurantService';
 import { fetchTables, fetchBookingsForDate } from '@/services/supabaseBookingService';
@@ -16,6 +17,7 @@ const Index = () => {
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
   const { user } = useAuth();
   const [bookingRestaurant, setBookingRestaurant] = useState<Restaurant | undefined>(undefined);
+  const [defaultRestaurant, setDefaultRestaurant] = useState<Restaurant | undefined>(undefined);
 
   // Filter bar state
   const [selectedDate, setSelectedDate] = useState('');
@@ -50,6 +52,10 @@ const Index = () => {
       try {
         const allRestaurants = await fetchRestaurants();
         setFilteredRestaurants(allRestaurants);
+        
+        if (allRestaurants.length > 0 && !defaultRestaurant) {
+          setDefaultRestaurant(allRestaurants[0]);
+        }
 
         // If date, time, and party size are selected, check booking status
         if (selectedDate && selectedTime && selectedPartySize) {
@@ -130,6 +136,8 @@ const Index = () => {
       )}
       <HeroSection 
         onBookTable={() => handleBookingClick()}
+        restaurantName={defaultRestaurant?.name}
+        imageUrl={defaultRestaurant?.image_url || undefined}
       />
       <TableSizesSection />
       <RestaurantInfoSection 
@@ -145,6 +153,10 @@ const Index = () => {
         initialTime={initialTime}
         initialPartySize={initialPartySize}
       />
+      
+      {defaultRestaurant && (defaultRestaurant as any).elevenlabs_enabled && (defaultRestaurant as any).elevenlabs_agent_id && (
+        <ElevenLabsWidget agentId={(defaultRestaurant as any).elevenlabs_agent_id} />
+      )}
     </div>
   );
 };

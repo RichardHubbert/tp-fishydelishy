@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { Restaurant } from '@/components/RestaurantSelector';
+import { siteConfig } from '@/config/site';
 
 interface RestaurantContextType {
   selectedRestaurant: Restaurant | undefined;
@@ -12,14 +13,14 @@ interface RestaurantProviderProps {
   children: ReactNode;
 }
 
-// Default Amici Coffee restaurant data
+// Default restaurant data from config
 const defaultRestaurant: Restaurant = {
-  id: '24e2799f-60d5-4e3b-bb30-b8049c9ae56d',
-  name: 'Amici Coffee',
-  address: '123 Fine Dining Street, Downtown District',
-  cuisine: 'Coffee & Dining',
+  id: siteConfig.ids.restaurantId,
+  name: siteConfig.business.name,
+  address: siteConfig.contact.address,
+  cuisine: 'Fine Dining',
   rating: 4.8,
-  imageUrl: '/amicicoffee.jpg'
+  imageUrl: siteConfig.branding.assets.heroImage
 };
 
 export const RestaurantProvider: React.FC<RestaurantProviderProps> = ({ children }) => {

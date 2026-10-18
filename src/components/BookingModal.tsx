@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { siteConfig } from '@/config/site';
 
 interface NavigatorWithConnection extends Navigator {
   connection?: {
@@ -53,7 +54,7 @@ const steps = [
 const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, restaurant, initialDate, initialTime, initialPartySize }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [bookingData, setBookingData] = useState<Partial<BookingData>>({ 
-    restaurantId: '24e2799f-60d5-4e3b-bb30-b8049c9ae56d', // Default Amici Coffee restaurant ID
+    restaurantId: siteConfig.ids.restaurantId, // Default restaurant ID from config
     date: undefined 
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -67,7 +68,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, restaurant
   useEffect(() => {
     if (isOpen) {
       const updatedData: Partial<BookingData> = {
-        restaurantId: '24e2799f-60d5-4e3b-bb30-b8049c9ae56d', // Always use default restaurant
+        restaurantId: siteConfig.ids.restaurantId, // Always use default restaurant
         date: initialDate ? new Date(initialDate) : undefined,
         startTime: initialTime || '',
         partySize: initialPartySize ? parseInt(initialPartySize) : undefined,
@@ -91,7 +92,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, restaurant
   const handleClose = () => {
     setCurrentStep(1);
     setBookingData({ 
-      restaurantId: '24e2799f-60d5-4e3b-bb30-b8049c9ae56d', // Keep default restaurant ID
+      restaurantId: siteConfig.ids.restaurantId, // Keep default restaurant ID
       date: undefined 
     });
     setConfirmationData(null);

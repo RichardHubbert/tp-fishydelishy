@@ -1,12 +1,24 @@
-# Amici Coffee
+# Fishy Delishy - Table Pilot
 
 ## Project info
 
 **Development URL**: https://lovable.dev/projects/572fb16c-338f-484d-a597-4d5dc1a7a5cc
 
-**Production URL**: https://tablepilot.co.uk
+**Production URL**: https://tablepilot.co.uk/fishydelishy/
 
-**Project Name**: Amici Coffee
+**Project Name**: Fishy Delishy
+
+## Config-Driven Architecture
+
+This project has been migrated to use the config-driven layout from [tp-core](https://github.com/RichardHubbert/tp-core). All client-specific values are centralized in `src/config/site.ts`.
+
+### Key Configuration
+
+- **Business Config**: `src/config/site.ts` - Single source of truth for business name, branding, contact info, SEO, etc.
+- **Brand Assets**: `public/brand/` - All brand-specific assets (favicon, logo, hero image, og-image)
+- **Environment**: `.env` (gitignored) and `.env.example` - Supabase and service credentials
+
+To customize this site for a different client, see [CLONING.md](./CLONING.md).
 
 ## How can I edit this code?
 

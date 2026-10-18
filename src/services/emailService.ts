@@ -1,6 +1,7 @@
 import emailjs from '@emailjs/browser';
 import { format } from 'date-fns';
 import { Booking } from './supabaseBookingService';
+import { siteConfig } from '@/config/site';
 
 // EmailJS service configuration
 const SERVICE_ID = 'service_fvy9wzm'; // EmailJS service ID
@@ -35,10 +36,10 @@ export const sendBookingConfirmationEmail = async (booking: Booking): Promise<{ 
       booking_date_time: formattedDateTime,
       party_size: booking.party_size,
       special_requests: booking.special_requests || 'None',
-      restaurant_name: 'Amici Coffee',
-      restaurant_address: '123 Main Street, London, UK',
-      restaurant_phone: '+44 20 7946 0958',
-      restaurant_email: 'contact@tablepilot.com',
+      restaurant_name: siteConfig.business.name,
+      restaurant_address: siteConfig.contact.address,
+      restaurant_phone: siteConfig.contact.phone,
+      restaurant_email: siteConfig.contact.email,
     };
     
     console.log('📧 Sending confirmation email with params:', templateParams);

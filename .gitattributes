@@ -1,0 +1,13 @@
+# .gitattributes for Table Pilot Client Sites
+#
+# This file defines merge strategies to prevent conflicts when updating
+# from the core tp-woodman repository.
+
+# Client-specific config: always keep ours during merge from core
+src/config/site.ts merge=ours
+
+# Brand assets: always keep ours during merge from core
+public/brand/** merge=ours
+
+# Environment example: manual review recommended but prefer ours
+.env.example merge=ours

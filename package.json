@@ -8,7 +8,8 @@
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "update-from-core": "bash scripts/update-from-core.sh"
   },
   "dependencies": {
     "@emailjs/browser": "^4.4.1",

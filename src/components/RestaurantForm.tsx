@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { Restaurant, createRestaurant, updateRestaurant } from '@/services/restaurantService';
 import { supabase } from '@/integrations/supabase/client';
@@ -36,6 +37,8 @@ const RestaurantForm: React.FC<RestaurantFormProps> = ({
     description: '',
     is_active: true,
     county: '',
+    elevenlabs_enabled: false,
+    elevenlabs_agent_id: '',
   });
 
   const isEditing = !!restaurant;
@@ -53,6 +56,8 @@ const RestaurantForm: React.FC<RestaurantFormProps> = ({
         description: restaurant.description || '',
         is_active: restaurant.is_active ?? true,
         county: restaurant.county || '',
+        elevenlabs_enabled: (restaurant as any).elevenlabs_enabled ?? false,
+        elevenlabs_agent_id: (restaurant as any).elevenlabs_agent_id || '',
       });
       if (restaurant.image_url) {
         setImagePreview(restaurant.image_url);
@@ -179,7 +184,9 @@ const RestaurantForm: React.FC<RestaurantFormProps> = ({
       const restaurantData = {
         ...formData,
         image_url: imageUrl,
-        rating: formData.rating ? parseFloat(formData.rating) : null
+        rating: formData.rating ? parseFloat(formData.rating) : null,
+        elevenlabs_enabled: formData.elevenlabs_enabled,
+        elevenlabs_agent_id: formData.elevenlabs_agent_id || null,
       };
 
       if (isEditing && restaurant) {
@@ -221,7 +228,7 @@ const RestaurantForm: React.FC<RestaurantFormProps> = ({
     <Card className="w-full max-w-2xl mx-auto">
       <CardHeader>
         <CardTitle>
-          {isEditing ? 'Edit Restaurant' : 'Add New Restaurant'}
+          {isEditing ? 'Edit details' : 'Add New Restaurant'}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -315,7 +322,8 @@ const RestaurantForm: React.FC<RestaurantFormProps> = ({
 
           {/* Image Upload Section */}
           <div className="space-y-2">
-            <Label>Restaurant Image</Label>
+            <Label>Hero image</Label>
+            <p className="text-xs text-gray-500">This image sits behind the welcome message on the homepage.</p>
             <div
               className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
                 imagePreview 
@@ -378,6 +386,69 @@ const RestaurantForm: React.FC<RestaurantFormProps> = ({
               rows={3}
             />
           </div>
+
+          {/* ElevenLabs Agent Section */}
+          {isEditing && (
+            <div className="space-y-4 border-t pt-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="elevenlabs_enabled" className="text-base">ElevenLabs agent</Label>
+                  <p className="text-sm text-gray-500">Show a voice widget on the public booking page.</p>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-gray-600">Off</span>
+                  <Switch
+                    id="elevenlabs_enabled"
+                    checked={formData.elevenlabs_enabled}
+                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, elevenlabs_enabled: checked }))}
+                  />
+                  <span className="text-sm text-gray-600">On</span>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="elevenlabs_agent_id">Agent ID</Label>
+                <Input
+                  id="elevenlabs_agent_id"
+                  value={formData.elevenlabs_agent_id}
+                  onChange={(e) => setFormData(prev => ({ ...prev, elevenlabs_agent_id: e.target.value }))}
+                  placeholder="agent_9301m4tq5nxgfx9Ba3kkcb40zn7r"
+                />
+                <p className="text-xs text-gray-500">
+                  Paste the agent ID from ElevenLabs. The agent needs to be public, with authentication turned off.
+                </p>
+              </div>
+
+              <Button 
+                type="button" 
+                onClick={async () => {
+                  if (restaurant) {
+                    try {
+                      await updateRestaurant(restaurant.id, {
+                        elevenlabs_enabled: formData.elevenlabs_enabled,
+                        elevenlabs_agent_id: formData.elevenlabs_agent_id,
+                      });
+                      toast({
+                        title: "Agent Settings Saved",
+                        description: "ElevenLabs agent settings have been updated.",
+                      });
+                    } catch (error) {
+                      console.error('Error saving agent settings:', error);
+                      toast({
+                        title: "Error",
+                        description: "Failed to save agent settings.",
+                        variant: "destructive",
+                      });
+                    }
+                  }
+                }}
+                variant="outline"
+                className="w-full"
+              >
+                Save agent
+              </Button>
+            </div>
+          )}
 
           <div className="flex items-center space-x-2">
             <input

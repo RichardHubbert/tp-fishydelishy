@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { sendCustomerToCRM } from '@/services/crmService';
 import { useToast } from '@/hooks/use-toast';
+import { siteConfig } from '@/config/site';
 
 const CRMTestButton: React.FC = () => {
   const [isTesting, setIsTesting] = useState(false);
@@ -17,13 +18,13 @@ const CRMTestButton: React.FC = () => {
         customerEmail: 'john.smith@example.com',
         customerPhone: '+44 20 7946 0958',
         specialRequests: 'Window seat preferred',
-        restaurantId: 'restaurant-123',
-        restaurantName: 'Amici Coffee',
+        restaurantId: siteConfig.ids.restaurantId,
+        restaurantName: siteConfig.business.name,
         bookingDate: '2024-01-20',
         startTime: '19:30',
         partySize: 3,
         bookingId: 'booking-test-' + Date.now(),
-        businessId: '24e2799f-60d5-4e3b-bb30-b8049c9ae56d' // Add business ID for testing
+        businessId: siteConfig.ids.businessId
       };
 
       console.log('🧪 Testing CRM integration with realistic data:', testData);
