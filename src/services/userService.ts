@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
+import { siteConfig } from '@/config/site';
 
 export type User = TablesInsert<'profiles'> & { id: string };
 export type UserUpdate = TablesUpdate<'profiles'>;
@@ -182,16 +183,16 @@ export const inviteUser = async (email: string, role: UserRole, fullName?: strin
   return await createUserProfile(profileData);
 };
 
-// Get all bookings for Amici Coffee (for customer analysis)
+// Get all bookings for configured restaurant (for customer analysis)
 export const getAmiciCoffeeBookings = async (): Promise<any[]> => {
   const { data, error } = await supabase
     .from('bookings')
     .select('*')
-    .eq('restaurant_id', '24e2799f-60d5-4e3b-bb30-b8049c9ae56d')
+    .eq('restaurant_id', siteConfig.ids.restaurantId)
     .order('created_at', { ascending: false });
 
   if (error) {
-    console.error('Error fetching Amici Coffee bookings:', error);
+    console.error('Error fetching bookings:', error);
     throw error;
   }
 
@@ -204,7 +205,7 @@ export const getCustomerHistory = async (customerEmail: string): Promise<any[]> 
     .from('bookings')
     .select('*')
     .eq('customer_email', customerEmail)
-    .eq('restaurant_id', '24e2799f-60d5-4e3b-bb30-b8049c9ae56d')
+    .eq('restaurant_id', siteConfig.ids.restaurantId)
     .order('booking_date', { ascending: false })
     .order('start_time', { ascending: false });
 
@@ -216,16 +217,16 @@ export const getCustomerHistory = async (customerEmail: string): Promise<any[]> 
   return data || [];
 };
 
-// Get unique customers for Amici Coffee
+// Get unique customers for configured restaurant
 export const getAmiciCoffeeCustomers = async (): Promise<any[]> => {
   const { data, error } = await supabase
     .from('bookings')
     .select('customer_email, customer_name, customer_phone')
-    .eq('restaurant_id', '24e2799f-60d5-4e3b-bb30-b8049c9ae56d')
+    .eq('restaurant_id', siteConfig.ids.restaurantId)
     .neq('status', 'cancelled');
 
   if (error) {
-    console.error('Error fetching Amici Coffee customers:', error);
+    console.error('Error fetching customers:', error);
     throw error;
   }
 

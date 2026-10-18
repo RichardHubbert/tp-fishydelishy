@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { siteConfig } from '@/config/site';
 
 export interface Business {
   id: string;
@@ -50,9 +51,8 @@ export interface CustomerAnalytics {
 
 // Get current business from URL or context
 export const getCurrentBusiness = (): string => {
-  // For now, hardcode to Amici Coffee
-  // In production, this would be determined by domain or subdomain
-  return 'amicicoffee';
+  // Return the configured business slug
+  return siteConfig.ids.slug;
 };
 
 // Fetch all businesses (admin only)
@@ -103,7 +103,7 @@ export const fetchBusinessCustomers = async (businessSlug: string): Promise<Cust
     // Transform RPC result to match Customer interface
     return (data || []).map(customer => ({
       id: customer.customer_id,
-      business_id: '24e2799f-60d5-4e3b-bb30-b8049c9ae56d',
+      business_id: siteConfig.ids.businessId,
       email: customer.email,
       first_name: customer.first_name,
       last_name: customer.last_name,
@@ -127,7 +127,7 @@ const fetchCustomersFallback = async (): Promise<Customer[]> => {
     const { data, error } = await supabase
       .from('bookings')
       .select('customer_email, customer_name, customer_phone, booking_date, party_size')
-      .eq('business_id', '24e2799f-60d5-4e3b-bb30-b8049c9ae56d') // Amici Coffee
+      .eq('business_id', siteConfig.ids.businessId)
       .order('booking_date', { ascending: false });
 
     if (error) {
@@ -145,7 +145,7 @@ const fetchCustomersFallback = async (): Promise<Customer[]> => {
         
         customerMap.set(booking.customer_email, {
           id: `fallback-${booking.customer_email}`,
-          business_id: '24e2799f-60d5-4e3b-bb30-b8049c9ae56d',
+          business_id: siteConfig.ids.businessId,
           email: booking.customer_email,
           first_name: firstName || undefined,
           last_name: lastName || undefined,

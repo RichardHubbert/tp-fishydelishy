@@ -6,6 +6,7 @@ import MobileMenu from '@/components/MobileMenu';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { siteConfig } from '@/config/site';
 
 interface NavigationHeaderProps {
   onBookingClick?: () => void;
@@ -15,6 +16,8 @@ const NavigationHeader = ({ onBookingClick }: NavigationHeaderProps) => {
   const { user, signOut } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { business, branding } = siteConfig;
+  const { primary, primaryShade, lighter } = branding.colors;
 
   const handleLogout = async () => {
     try {
@@ -45,11 +48,11 @@ const NavigationHeader = ({ onBookingClick }: NavigationHeaderProps) => {
     <div className="fixed top-0 left-0 right-0 w-full z-50 bg-white border-b flex items-center justify-between px-4 py-3">
       {/* Logo/Brand */}
       <div className="flex-1 flex items-center gap-2">
-        {/* TP Logo */}
-        <div className="w-10 h-10 rounded-full bg-amber-500 flex items-center justify-center shadow-md">
-          <span className="text-white font-bold text-lg select-none">TP</span>
+        {/* Logo Badge */}
+        <div className={`w-10 h-10 rounded-full bg-${primary}-${lighter} flex items-center justify-center shadow-md`}>
+          <span className="text-white font-bold text-lg select-none">{business.logoText}</span>
         </div>
-        <h1 className="text-2xl font-bold text-gray-900 ml-2">Amici Coffee</h1>
+        <h1 className="text-2xl font-bold text-gray-900 ml-2">{business.name}</h1>
       </div>
       
       {/* Right side navigation */}

@@ -1,6 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { format, addMinutes, isSameDay } from 'date-fns';
 import { sendCustomerToCRM } from './crmService';
+import { siteConfig } from '@/config/site';
 
 export interface Table {
   id: string;
@@ -213,7 +214,7 @@ export const createBooking = async (bookingData: {
       .insert({
         table_id: optimalTable.id,
         restaurant_id: bookingData.restaurantId,
-        business_id: '24e2799f-60d5-4e3b-bb30-b8049c9ae56d', // Amici Coffee business ID
+        business_id: siteConfig.ids.businessId,
         customer_name: bookingData.customerName,
         customer_email: bookingData.customerEmail,
         customer_phone: bookingData.customerPhone,

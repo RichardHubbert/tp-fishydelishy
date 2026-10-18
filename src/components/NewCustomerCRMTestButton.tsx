@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { sendNewCustomerToCRM } from '@/services/crmService';
 import { useToast } from '@/hooks/use-toast';
+import { siteConfig } from '@/config/site';
 
 const NewCustomerCRMTestButton: React.FC = () => {
   const [isTesting, setIsTesting] = useState(false);
@@ -16,7 +17,7 @@ const NewCustomerCRMTestButton: React.FC = () => {
         customerName: 'Jane Doe',
         customerEmail: 'jane.doe@example.com',
         customerPhone: '+44 20 7946 0959',
-        businessId: '24e2799f-60d5-4e3b-bb30-b8049c9ae56d', // Amici Coffee business ID
+        businessId: siteConfig.ids.businessId,
         customerId: 'test-customer-' + Date.now(),
         externalId: 'ext-' + Date.now(),
         dateOfBirth: '1990-01-15',
