@@ -7,7 +7,7 @@ import RestaurantInfoSection from '@/components/RestaurantInfoSection';
 import TopFilterBar from '@/components/TopFilterBar';
 import ElevenLabsWidget from '@/components/ElevenLabsWidget';
 import { useAuth } from '@/hooks/useAuth';
-import { fetchRestaurants, Restaurant } from '@/services/restaurantService';
+import { fetchRestaurantById, Restaurant } from '@/services/restaurantService';
 import { fetchTables, fetchBookingsForDate } from '@/services/supabaseBookingService';
 import { addMinutes, format } from 'date-fns';
 import { siteConfig } from '@/config/site';
@@ -51,12 +51,10 @@ const Index = () => {
       setLoading(true);
       setError(null);
       try {
-        const allRestaurants = await fetchRestaurants();
+        const restaurant = await fetchRestaurantById(siteConfig.ids.restaurantId);
+        const allRestaurants = restaurant ? [restaurant] : [];
         setFilteredRestaurants(allRestaurants);
-        
-        if (allRestaurants.length > 0 && !defaultRestaurant) {
-          setDefaultRestaurant(allRestaurants[0]);
-        }
+        setDefaultRestaurant(restaurant ?? undefined);
 
         // If date, time, and party size are selected, check booking status
         if (selectedDate && selectedTime && selectedPartySize) {

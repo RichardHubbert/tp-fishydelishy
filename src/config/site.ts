@@ -160,13 +160,9 @@ export const siteConfig = {
   // DATABASE IDS (Client-specific)
   // ============================================
   ids: {
-    // TODO: Replace with Fishy Delishy business ID once created in Supabase
-    // Currently using Amici Coffee's ID - needs updating
-    businessId: "24e2799f-60d5-4e3b-bb30-b8049c9ae56d",
-    // TODO: Replace with Fishy Delishy restaurant ID once created in Supabase
-    // Currently using Amici Coffee's ID - needs updating
-    restaurantId: "24e2799f-60d5-4e3b-bb30-b8049c9ae56d",
-    // TODO: Update slug to match Fishy Delishy once database is set up
+    // Shared bookings table. This site's rows are the ones with these ids.
+    businessId: "9da1ed04-cb17-4428-82fd-396113775bdf",
+    restaurantId: "9da1ed04-cb17-4428-82fd-396113775bdf",
     slug: "fishydelishy",
   },
 

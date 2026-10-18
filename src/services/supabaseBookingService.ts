@@ -66,7 +66,8 @@ export const fetchBookingsForDate = async (date: Date): Promise<Booking[]> => {
     .from('bookings')
     .select('*')
     .eq('booking_date', dateString)
-    .eq('status', 'confirmed');
+    .eq('status', 'confirmed')
+    .eq('restaurant_id', siteConfig.ids.restaurantId);
   
   if (error) {
     console.error('Error fetching bookings:', error);
@@ -222,7 +223,7 @@ export const createBooking = async (bookingData: {
       .from('bookings')
       .insert({
         table_id: optimalTable.id,
-        restaurant_id: bookingData.restaurantId,
+        restaurant_id: siteConfig.ids.restaurantId,
         business_id: siteConfig.ids.businessId,
         customer_name: bookingData.customerName,
         customer_email: bookingData.customerEmail,
@@ -288,6 +289,7 @@ export const fetchAllBookings = async (): Promise<Booking[]> => {
   const { data, error } = await supabase
     .from('bookings')
     .select(`*, restaurant:restaurant_id (id, name, cuisine)`)
+    .eq('restaurant_id', siteConfig.ids.restaurantId)
     .order('booking_date', { ascending: true })
     .order('start_time', { ascending: true });
 
@@ -376,7 +378,8 @@ export const deleteTable = async (id: string): Promise<void> => {
   const { error: bookingError } = await supabase
     .from('bookings')
     .delete()
-    .eq('table_id', id);
+    .eq('table_id', id)
+    .eq('restaurant_id', siteConfig.ids.restaurantId);
 
   if (bookingError) {
     console.error('Error deleting bookings for table:', bookingError);
@@ -437,7 +440,8 @@ export const placeBooking = async (booking: {
     .from('bookings')
     .insert({
       table_id: booking.tableId,
-      restaurant_id: booking.restaurantId || null,
+      restaurant_id: siteConfig.ids.restaurantId,
+      business_id: siteConfig.ids.businessId,
       customer_name: booking.customerName,
       customer_email: booking.customerEmail,
       customer_phone: booking.customerPhone || null,

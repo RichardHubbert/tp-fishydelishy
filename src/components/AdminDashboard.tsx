@@ -8,7 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { fetchTables, fetchAllBookings, getNextReservationForTable, type Table as TableType, type Booking, updateBooking, deleteBooking, createTable, updateTable, deleteTable, placeBooking } from '@/services/supabaseBookingService';
 import { useAdmin } from '@/hooks/useAdmin';
 import { Dialog, DialogContent, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { fetchRestaurants, Restaurant } from '@/services/restaurantService';
+import { fetchRestaurantById, Restaurant } from '@/services/restaurantService';
+import { siteConfig } from '@/config/site';
 import DashboardRestaurants from '@/components/DashboardRestaurants';
 import BookingTimeline from '@/components/BookingTimeline';
 import BookingModal from '@/components/BookingModal';
@@ -19,7 +20,7 @@ const AdminDashboard = () => {
   const [tables, setTables] = useState<TableType[]>([]);
   const [allBookings, setAllBookings] = useState<Booking[]>([]);
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
-  const [selectedRestaurant, setSelectedRestaurant] = useState<string>('');
+  const [selectedRestaurant, setSelectedRestaurant] = useState<string>(siteConfig.ids.restaurantId);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
@@ -41,17 +42,18 @@ const AdminDashboard = () => {
       try {
         setLoading(true);
         console.log('Loading admin dashboard data...');
-        const [tablesData, bookingsData, restaurantsData] = await Promise.all([
+        const [tablesData, bookingsData, restaurant] = await Promise.all([
           fetchTables(),
           fetchAllBookings(),
-          fetchRestaurants()
+          fetchRestaurantById(siteConfig.ids.restaurantId)
         ]);
         console.log('Tables loaded:', tablesData);
         console.log('Bookings loaded:', bookingsData);
-        console.log('Restaurants loaded:', restaurantsData);
+        console.log('Restaurant loaded:', restaurant);
         setTables(tablesData);
         setAllBookings(bookingsData);
-        setRestaurants(restaurantsData);
+        setRestaurants(restaurant ? [restaurant] : []);
+        setSelectedRestaurant(siteConfig.ids.restaurantId);
       } catch (err) {
         console.error('Error loading dashboard data:', err);
         setError('Failed to load dashboard data: ' + (err instanceof Error ? err.message : String(err)));
