@@ -1,10 +1,10 @@
 # Updating Client Sites from Core
 
-This guide explains how to push new features, bug fixes, and improvements from the **upstream core** (tp-woodman) to individual client restaurant sites.
+This guide explains how to push new features, bug fixes, and improvements from the **upstream core** (tp-core) to individual client restaurant sites.
 
 ## Overview
 
-The tp-woodman repository serves as the **single source of truth** for all shared functionality. When you build a new feature or fix a bug here, you can roll it out to all client sites with one command.
+The tp-core repository serves as the **single source of truth** for all shared functionality. When you build a new feature or fix a bug here, you can roll it out to all client sites with one command.
 
 **Key Principle:** Client-specific values (restaurant names, colors, contact info, brand assets) live in `src/config/site.ts` and `public/brand/`. Everything else is shared code that gets updated from this core repository.
 
@@ -14,10 +14,10 @@ The tp-woodman repository serves as the **single source of truth** for all share
 
 ### 1. Develop in the Core Repository
 
-Work on new features in `tp-woodman` (this repo):
+Work on new features in `tp-core` (this repo):
 
 ```bash
-cd tp-woodman
+cd tp-core
 git checkout -b feature/new-booking-flow
 # ... make your changes ...
 git add .
@@ -37,7 +37,7 @@ Before updating clients:
 
 ### 3. Roll Out to Client Sites
 
-For each client repository (e.g., `tp-amicicoffee`, `tp-fishydelishy`):
+For each client repository (e.g., `tp-woodman`, `tp-amicicoffee`, `tp-fishydelishy`):
 
 ```bash
 # Navigate to the client repo
@@ -48,7 +48,7 @@ npm run update-from-core
 ```
 
 That's it! The script will:
-- Fetch the latest changes from `tp-woodman`
+- Fetch the latest changes from `tp-core`
 - Merge them into the current branch
 - Keep the client's `site.ts` and brand assets untouched
 - Run `npm install` and `npm run build`
@@ -210,7 +210,7 @@ Now the client can receive updates normally.
 ## Best Practices
 
 ### ✅ DO:
-- Build new features in the **core** (`tp-woodman`)
+- Build new features in the **core** (`tp-core`)
 - Keep client-specific values in `src/config/site.ts`
 - Use the config throughout the codebase: `import { siteConfig } from '@/config/site'`
 - Test updates in a local client repo before pushing to production
@@ -228,29 +228,9 @@ Now the client can receive updates normally.
 
 ---
 
-## Renaming the Core Repository
+## Core Repository
 
-Consider renaming `tp-woodman` to something neutral like `tablepilot-core` to better reflect its role. GitHub automatically redirects the old URL, so existing clones keep working.
-
-### Steps to Rename:
-
-1. **On GitHub:**
-   - Go to https://github.com/RichardHubbert/tp-woodman
-   - Settings → Rename repository → `tablepilot-core`
-
-2. **Update the remote URL** in this repo:
-   ```bash
-   git remote set-url origin https://github.com/RichardHubbert/tablepilot-core.git
-   ```
-
-3. **Update `scripts/link-to-core.sh`:**
-   Change the `CORE_REPO_URL` variable to the new URL.
-
-4. **Update client repos:**
-   In each client, run:
-   ```bash
-   git remote set-url core https://github.com/RichardHubbert/tablepilot-core.git
-   ```
+The `tp-core` repository at https://github.com/RichardHubbert/tp-core is the neutral upstream template that all client sites derive from. It contains no client-specific branding or configuration.
 
 ---
 
@@ -285,7 +265,7 @@ This should have been set by `link-to-core.sh`, but double-check.
 ### Need to update the core URL
 Edit `scripts/link-to-core.sh` and change `CORE_REPO_URL`, then:
 ```bash
-git remote set-url core https://github.com/RichardHubbert/new-repo-name.git
+git remote set-url core https://github.com/RichardHubbert/tp-core.git
 ```
 
 ---
@@ -305,9 +285,9 @@ git push origin main
 ```
 
 ### Building New Features
-1. Develop in `tp-woodman` (core)
+1. Develop in `tp-core` (this repo)
 2. Merge to `main`
-3. For each client: `npm run update-from-core`
+3. For each client (including tp-woodman): `npm run update-from-core`
 4. Test and deploy
 
 ---

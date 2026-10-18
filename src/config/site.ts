@@ -14,9 +14,9 @@ export const siteConfig = {
   // BUSINESS INFORMATION
   // ============================================
   business: {
-    name: "Woodman and Olive",
+    name: "Your Restaurant Name", // TODO: Replace with your restaurant name
     // Short name/acronym shown in logo badge (e.g., "TP" for Table Pilot)
-    logoText: "TP",
+    logoText: "TP", // TODO: Replace with your restaurant initials or badge text
     // Optional: tagline or description
     tagline: "Restaurant Table Bookings",
   },
@@ -50,9 +50,9 @@ export const siteConfig = {
   // CONTACT & LOCATION
   // ============================================
   contact: {
-    phone: "",  // Optional: Default phone (can be overridden per-restaurant in database)
-    email: "",  // Optional: Default email (can be overridden per-restaurant in database)
-    address: "Address to be confirmed",  // Optional: Default address
+    phone: "",  // TODO: Add your phone number (can be overridden per-restaurant in database)
+    email: "hello@example.com",  // TODO: Add your email (can be overridden per-restaurant in database)
+    address: "",  // TODO: Add your address (can be overridden per-restaurant in database)
   },
 
   // ============================================
@@ -73,21 +73,21 @@ export const siteConfig = {
   // SEO & META TAGS
   // ============================================
   seo: {
-    title: "Woodman and Olive - Restaurant Table Bookings",
-    description: "Book your table at Woodman and Olive.",
+    title: "Your Restaurant Name - Table Bookings", // TODO: Update with your restaurant name
+    description: "Book your table online. Choose your date, time, and party size.", // TODO: Update with your description
     keywords: "restaurant, booking, table reservation, dining",
-    author: "Woodman and Olive",
+    author: "Your Restaurant Name", // TODO: Update with your restaurant name
     
     // Open Graph (Facebook, LinkedIn, etc.)
     og: {
       type: "website",
-      image: "https://lovable.dev/opengraph-image-p98pqg.png",
+      image: "/brand/og-image.png", // TODO: Add your social share image to public/brand/
     },
     
     // Twitter
     twitter: {
       card: "summary_large_image",
-      site: "@tablepilot",  // Twitter handle
+      site: "@yourhandle",  // TODO: Update with your Twitter/X handle
     },
   },
 
@@ -96,11 +96,11 @@ export const siteConfig = {
   // ============================================
   urls: {
     // Production domain (without protocol)
-    domain: "tablepilot.co.uk",
-    // Base path for the app (e.g., "/woodmanandolive" or "/" for root)
-    basePath: "/woodmanandolive",
+    domain: "yourdomain.com", // TODO: Update with your domain
+    // Base path for the app (e.g., "/yourrestaurant" or "/" for root)
+    basePath: "/", // TODO: Update if deploying to a subdirectory
     // Full production URL
-    productionUrl: "https://tablepilot.co.uk/woodmanandolive/",
+    productionUrl: "https://yourdomain.com/", // TODO: Update with your full production URL
   },
 
   // ============================================
@@ -151,8 +151,8 @@ export const siteConfig = {
   email: {
     // Default "from" name for booking confirmations
     // Actual email address is set in Supabase secrets (RESEND_FROM)
-    fromName: "Woodman and Olive",
-    defaultFromEmail: "onboarding@resend.dev",  // Fallback only
+    fromName: "Your Restaurant Name", // TODO: Update with your restaurant name
+    defaultFromEmail: "onboarding@resend.dev",  // Fallback only (use your verified domain in production)
   },
 } as const;
 

@@ -37,7 +37,7 @@ The following customer information is sent to your CRM:
 
 ```bash
 # Navigate to your project directory
-cd tablepilotpro
+cd your-project-directory
 
 # Deploy the function to Supabase
 supabase functions deploy send-customer-to-crm
@@ -47,7 +47,7 @@ supabase functions deploy send-customer-to-crm
 
 Set up the following environment variables in your Supabase project:
 
-1. Go to your Supabase Dashboard: https://supabase.com/dashboard/project/mxrrvqnfxfigeofbhepv
+1. Go to your Supabase Dashboard: https://supabase.com/dashboard/project/YOUR_PROJECT_REF
 2. Navigate to Settings → Edge Functions
 3. Add the following environment variables:
 
@@ -76,7 +76,7 @@ Your CRM application needs to accept POST requests at the configured endpoint wi
   "booking": {
     "id": "uuid-here",
     "restaurant_id": "restaurant-uuid",
-    "restaurant_name": "Amici Coffee",
+    "restaurant_name": "Your Restaurant Name",
     "date": "2024-01-15",
     "time": "19:00",
     "party_size": 4,

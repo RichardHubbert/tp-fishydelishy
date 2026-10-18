@@ -6,9 +6,10 @@ This directory contains client-specific brand assets. These files are protected 
 
 Place your client's branding files here:
 
-- **`logo.png`** - Main logo (transparent PNG recommended, ~200-400px wide)
-- **`favicon.ico`** - Browser icon (16×16, 32×32, or 48×48 pixels)
-- **`og-image.jpg`** - Social media preview image (1200×630px recommended)
+- **`favicon.ico`** - Browser icon (16×16, 32×32, or 48×48 pixels) - REQUIRED
+- **`logo.png`** (optional) - Main logo (transparent PNG recommended, ~200-400px wide)
+- **`og-image.png`** (optional) - Social media preview image (1200×630px recommended)
+- **`hero.jpg`** (optional) - Hero background image (1920×800px recommended)
 
 ## Optional Files
 

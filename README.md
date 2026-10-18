@@ -1,6 +1,8 @@
-# Table Pilot Pro - Configurable Restaurant Booking System
+# Table Pilot Core - Neutral Template for Restaurant Booking Sites
 
-A modern, easily cloneable restaurant table booking application built with React, TypeScript, Supabase, and Tailwind CSS.
+The upstream core template for Table Pilot restaurant booking applications. This repository serves as the neutral foundation for all tp- client sites (tp-woodman, tp-amicicoffee, tp-fishydelishy, etc.).
+
+Built with React, TypeScript, Supabase, and Tailwind CSS.
 
 ## 🌟 Key Features
 
@@ -12,23 +14,23 @@ A modern, easily cloneable restaurant table booking application built with React
 - **Responsive Design**: Works seamlessly on desktop and mobile
 - **Email Notifications**: Automated booking confirmations via Resend
 
-## 🚀 Quick Start for New Clients
+## 🚀 Creating a New Client Site
 
-**Want to duplicate this app for a new restaurant?** See **[CLONING.md](./CLONING.md)** for the complete step-by-step guide.
+**Want to create a new restaurant booking site?** See **[CLONING.md](./CLONING.md)** for the complete step-by-step guide.
 
 ### Quick Setup Summary
 
-1. Use this repo as a template or clone it
+1. Create a new repository from this template (or fork it)
 2. Edit `src/config/site.ts` with your client's information
-3. Replace brand assets in `public/brand/`
-4. Set up Supabase and update `.env`
+3. Replace placeholder assets in `public/brand/` with your branding
+4. Set up your Supabase project and update `.env`
 5. Deploy!
 
 Optional: Run `npm run new-client` for an interactive setup wizard.
 
 ## 🎨 What's Configurable?
 
-Everything client-specific is now in **one file**: `src/config/site.ts`
+Everything client-specific is in **one file**: `src/config/site.ts`
 
 - ✅ Business name and branding
 - ✅ Logo text and colors
@@ -39,12 +41,12 @@ Everything client-specific is now in **one file**: `src/config/site.ts`
 - ✅ Feature copy and messaging
 - ✅ Email sender configuration
 
-**Current site**: Woodman and Olive
+**This is the neutral template** - all placeholders should be replaced when creating a client site.
 
 ## 📁 Project Structure
 
 ```
-tp-woodman/
+tp-core/
 ├── src/
 │   ├── config/
 │   │   └── site.ts           ← 🎯 Edit this file for new clients!
@@ -202,34 +204,34 @@ supabase secrets set RESEND_API_KEY=your_resend_key
 supabase secrets set RESEND_FROM="Your Restaurant <email@domain.com>"
 ```
 
-## 🎯 Multi-Client Management
+## 🎯 Multi-Client Architecture
 
-This codebase is designed to be easily duplicated for multiple restaurant clients. Each client gets:
+This is the **neutral upstream core** repository that all client sites link to. Each client site:
 
-- Their own repository (forked or templated from this one)
-- Their own `src/config/site.ts` configuration
-- Their own brand assets in `public/brand/`
-- Their own Supabase project
-- Their own deployment
+- Has their own repository (created from this template)
+- Links to tp-core as their upstream remote
+- Receives updates via `npm run update-from-core`
+- Maintains their own `src/config/site.ts` and `public/brand/` (protected from overwrites)
+- Has their own Supabase project and deployment
 
-**Example sites using this template:**
+**Client sites using this template:**
 - tp-woodman (Woodman and Olive)
-- tp-amicicoffee (Amici Coffee)
+- tp-amicicoffee (Amici Coffee)  
 - tp-fishydelishy (Fishy Delishy)
 
-### 🔄 Upstream Core Architecture
+### 🔄 How It Works
 
-This repository serves as the **upstream core** for all client sites. New features and bug fixes can be pushed to all clients while preserving their specific configurations.
+This repository contains **no client-specific branding**. New features and bug fixes developed here can be pushed to all clients while preserving their specific configurations.
 
 **Key files for multi-client workflow:**
-- `src/config/site.ts` - Client configuration (protected from merges)
-- `public/brand/` - Brand assets (protected from merges)
+- `src/config/site.ts` - Client configuration (protected from merges via .gitattributes)
+- `public/brand/` - Brand assets (protected from merges via .gitattributes)
 - `.gitattributes` - Merge protection rules
-- `scripts/link-to-core.sh` - Connect a client repo to this core (one-time)
-- `scripts/update-from-core.sh` - Pull updates from core to client (recurring)
+- `scripts/link-to-core.sh` - Connect a client repo to tp-core (one-time setup)
+- `scripts/update-from-core.sh` - Pull updates from tp-core to client (recurring)
 
-**For client setup:** See [CLONING.md](./CLONING.md)  
-**For rolling out updates:** See [UPDATING.md](./UPDATING.md)
+**To create a new client site:** See [CLONING.md](./CLONING.md)  
+**To roll out updates to clients:** See [UPDATING.md](./UPDATING.md)
 
 ## 📝 Making Changes
 
@@ -278,12 +280,14 @@ This repository serves as the **upstream core** for all client sites. New featur
 
 ## 🤝 Contributing
 
-This is a client project template. If you're working on the base template:
+This is the upstream core template. When making changes:
 
-1. Make changes that benefit all clients
-2. Test thoroughly
-3. Update CLONING.md if setup process changes
-4. Document breaking changes
+1. Keep it neutral - no client-specific values
+2. Make changes that benefit all clients
+3. Test thoroughly with at least one client site
+4. Update CLONING.md if setup process changes
+5. Document breaking changes in commit messages
+6. After merging, roll out to client sites with `npm run update-from-core`
 
 ## 📄 License
 
@@ -298,5 +302,5 @@ Private repository - All rights reserved
 
 ---
 
-**Current Configuration**: Woodman and Olive  
+**Repository**: tp-core (neutral template)  
 **Last Updated**: October 2026

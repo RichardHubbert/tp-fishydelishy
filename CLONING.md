@@ -1,6 +1,6 @@
-# 🔄 Cloning This Site for a New Client
+# 🔄 Cloning This Template for a New Client
 
-This guide walks you through duplicating this Table Pilot app for a new restaurant or business. The process has been streamlined so you only need to edit **one config file** and swap out a few assets.
+This guide walks you through creating a new Table Pilot restaurant booking site from this template. The process has been streamlined so you only need to edit **one config file** and swap out a few assets.
 
 ## ✅ Prerequisites
 
@@ -35,8 +35,8 @@ This guide walks you through duplicating this Table Pilot app for a new restaura
 Edit **`src/config/site.ts`** and update all the values for your new client:
 
 #### Essential Updates:
-- **Business name**: Change `business.name` from "Woodman and Olive" to your client's name
-- **Logo text**: Update `business.logoText` (the badge shown in the header, e.g., "TP", "AM", "FD")
+- **Business name**: Change `business.name` from "Your Restaurant Name" to your client's name
+- **Logo text**: Update `business.logoText` (the badge shown in the header, e.g., "TP", "WO", "AC", "FD")
 - **Brand colors**: Change the `branding.colors.primary` (e.g., from "amber" to "blue", "green", "purple")
 - **Contact info**: Update `contact.phone`, `contact.email`, `contact.address`
 - **Opening hours**: Update `hours.display` and `hours.lastBooking`
@@ -59,7 +59,7 @@ Navigate to the `public/brand/` folder and replace these files:
 | `hero.jpg` (optional) | Default hero background | 1920×800 px |
 | `og-image.png` (optional) | Social share preview | 1200×630 px |
 
-**Current asset**: The existing `favicon.ico` is from Woodman and Olive.
+**Current assets**: Replace the template assets with your own.
 
 ⚠️ **Important**: Keep the same filenames! If you use different names, update them in `src/config/site.ts` under `branding.assets`.
 
@@ -291,7 +291,7 @@ After initial setup, your client site can receive updates from the upstream core
 
 ## 🐛 Found an Issue?
 
-If you encounter problems with the cloning process itself (not client-specific issues), please open an issue in the original tp-woodman repository.
+If you encounter problems with the template itself (not client-specific issues), please open an issue in the tp-core repository.
 
 ---
 

@@ -179,7 +179,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const restaurantName = body.restaurant_name?.trim() || "Woodman and Olive";  // Default fallback
+    const restaurantName = body.restaurant_name?.trim() || "Your Restaurant";  // Default fallback
     const guestName = body.to_name?.trim() || "there";
     const when = body.booking_date_time?.trim() || "the booked time";
     const partySize = body.party_size ?? "";
@@ -188,7 +188,7 @@ Deno.serve(async (req) => {
     const phone = body.restaurant_phone?.trim() || "";
     const restaurantEmail = body.restaurant_email?.trim() || "";
     const bookingId = body.booking_id?.trim() || "";
-    const from = Deno.env.get("RESEND_FROM") || "Woodman and Olive <onboarding@resend.dev>";  // Default fallback
+    const from = Deno.env.get("RESEND_FROM") || "Your Restaurant <onboarding@resend.dev>";  // Default fallback
 
     const message = buildBookingEmail({
       restaurantName,
