@@ -1,0 +1,18 @@
+# Client-Specific Files: Preserve during upstream merges
+# These files should not be overwritten when pulling updates from core
+
+# Site configuration
+src/config/site.ts merge=ours
+
+# Brand assets
+public/brand/** merge=ours
+
+# Environment files are already in .gitignore, but adding for clarity
+.env merge=ours
+.env.local merge=ours
+
+# Note: Before the first merge, run this one-time setup:
+# git config merge.ours.driver true
+# 
+# This tells git to keep "our" version (the client's version) of these files
+# during merges from the upstream core repository.

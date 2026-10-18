@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Amici Coffee - Booking Confirmation</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .header {
+      background-color: #f8b400;
+      color: #fff;
+      padding: 20px;
+      text-align: center;
+      border-radius: 5px 5px 0 0;
+    }
+    .content {
+      background-color: #f9f9f9;
+      padding: 20px;
+      border-radius: 0 0 5px 5px;
+    }
+    .booking-details {
+      background-color: #fff;
+      padding: 15px;
+      border-radius: 5px;
+      margin: 20px 0;
+      border-left: 4px solid #f8b400;
+    }
+    .footer {
+      text-align: center;
+      font-size: 12px;
+      color: #777;
+      margin-top: 30px;
+    }
+    .button {
+      display: inline-block;
+      background-color: #f8b400;
+      color: #fff;
+      padding: 10px 20px;
+      text-decoration: none;
+      border-radius: 5px;
+      margin-top: 20px;
+    }
+    .restaurant-info {
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #ddd;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Booking Confirmation</h1>
+  </div>
+  
+  <div class="content">
+    <p>Dear {{to_name}},</p>
+    
+    <p>Thank you for choosing Amici Coffee. Your reservation has been confirmed!</p>
+    
+    <div class="booking-details">
+      <h3>Reservation Details:</h3>
+      <p><strong>Booking ID:</strong> {{booking_id}}</p>
+      <p><strong>Date & Time:</strong> {{booking_date_time}}</p>
+      <p><strong>Party Size:</strong> {{party_size}} people</p>
+      <p><strong>Special Requests:</strong> {{special_requests}}</p>
+    </div>
+    
+    <p>If you need to modify or cancel your reservation, please contact us at least 24 hours in advance.</p>
+    
+    <a href="https://tablepilot.com/bookings/{{booking_id}}" class="button">View Reservation</a>
+    
+    <div class="restaurant-info">
+      <h3>{{restaurant_name}}</h3>
+      <p>{{restaurant_address}}</p>
+      <p>Phone: {{restaurant_phone}}</p>
+      <p>Email: {{restaurant_email}}</p>
+    </div>
+  </div>
+  
+  <div class="footer">
+    <p>This is an automated message. Please do not reply to this email.</p>
+    <p>&copy; 2025 Amici Coffee. All rights reserved.</p>
+  </div>
+</body>
+</html>

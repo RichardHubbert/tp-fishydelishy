@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test CRM Function</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        label {
+            font-weight: bold;
+        }
+        input, textarea {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        .response {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test CRM Function</h1>
+    <div class="container">
+        <div class="form-group">
+            <label for="apiKey">API Key (Service Role):</label>
+            <input type="text" id="apiKey" value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im14cnJ2cW5meGZpZ2VvZmJoZXB2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTczOTIwNDg3MSwiZXhwIjoyMDU0NzgwODcxfQ.Hp2ctK1Y0rxuLBQNd5bs0Rd4yALTe60JmeVsTExkgk4">
+        </div>
+        <div class="form-group">
+            <label for="payload">Request Payload (JSON):</label>
+            <textarea id="payload" rows="10">{
+  "customerName": "John Smith",
+  "customerEmail": "john.smith@example.com",
+  "customerPhone": "555-6789",
+  "restaurantId": "24e2799f-60d5-4e3b-bb30-b8049c9ae56d",
+  "restaurantName": "Test Restaurant",
+  "bookingDate": "2025-07-15",
+  "startTime": "19:00",
+  "partySize": 4,
+  "bookingId": "booking-123"
+}</textarea>
+        </div>
+        <div>
+            <button id="testBtn">Test Function</button>
+            <button id="testEndpointBtn">Test /test Endpoint</button>
+        </div>
+        <div class="response">
+            <h3>Response:</h3>
+            <pre id="response">Response will appear here...</pre>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('testBtn').addEventListener('click', async () => {
+            const apiKey = document.getElementById('apiKey').value;
+            const payload = document.getElementById('payload').value;
+            const responseElement = document.getElementById('response');
+            
+            try {
+                responseElement.textContent = 'Loading...';
+                
+                // Parse the payload to validate it's proper JSON
+                const parsedPayload = JSON.parse(payload);
+                
+                // Make the request to the function
+                const response = await fetch('https://mxrrvqnfxfigeofbhepv.supabase.co/functions/v1/send-customer-to-crm', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: payload
+                });
+                
+                // Get the response text
+                const responseText = await response.text();
+                
+                // Try to parse as JSON for prettier display
+                try {
+                    const jsonResponse = JSON.parse(responseText);
+                    responseElement.textContent = JSON.stringify(jsonResponse, null, 2);
+                } catch (e) {
+                    // If not valid JSON, just show the raw text
+                    responseElement.textContent = responseText;
+                }
+                
+                // Add status code to the output
+                responseElement.textContent = `Status: ${response.status} ${response.statusText}\n\n${responseElement.textContent}`;
+            } catch (error) {
+                responseElement.textContent = `Error: ${error.message}`;
+            }
+        });
+        
+        document.getElementById('testEndpointBtn').addEventListener('click', async () => {
+            const apiKey = document.getElementById('apiKey').value;
+            const responseElement = document.getElementById('response');
+            
+            try {
+                responseElement.textContent = 'Loading...';
+                
+                // Make the request to the test endpoint
+                const response = await fetch('https://mxrrvqnfxfigeofbhepv.supabase.co/functions/v1/send-customer-to-crm/test', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: '{}'
+                });
+                
+                // Get the response text
+                const responseText = await response.text();
+                
+                // Try to parse as JSON for prettier display
+                try {
+                    const jsonResponse = JSON.parse(responseText);
+                    responseElement.textContent = JSON.stringify(jsonResponse, null, 2);
+                } catch (e) {
+                    // If not valid JSON, just show the raw text
+                    responseElement.textContent = responseText;
+                }
+                
+                // Add status code to the output
+                responseElement.textContent = `Status: ${response.status} ${response.statusText}\n\n${responseElement.textContent}`;
+            } catch (error) {
+                responseElement.textContent = `Error: ${error.message}`;
+            }
+        });
+    </script>
+</body>
+</html>
