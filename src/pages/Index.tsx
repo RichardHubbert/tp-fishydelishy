@@ -10,6 +10,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { fetchRestaurants, Restaurant } from '@/services/restaurantService';
 import { fetchTables, fetchBookingsForDate } from '@/services/supabaseBookingService';
 import { addMinutes, format } from 'date-fns';
+import { siteConfig } from '@/config/site';
 
 
 
@@ -130,13 +131,12 @@ const Index = () => {
       />
       {loading && <div className="text-center py-8">Loading restaurants...</div>}
       {error && <div className="text-center text-red-600 py-4">{error}</div>}
-
       {!loading && filteredRestaurants.length === 0 && (
         <div className="text-center text-gray-500 py-8">No restaurants found.</div>
       )}
       <HeroSection 
         onBookTable={() => handleBookingClick()}
-        restaurantName={defaultRestaurant?.name}
+        restaurantName={defaultRestaurant?.name || siteConfig.business.name}
         imageUrl={defaultRestaurant?.image_url || undefined}
       />
       <TableSizesSection />

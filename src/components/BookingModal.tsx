@@ -240,7 +240,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, restaurant
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-center">
-            Reserve Your Table
+            {`Reserve a table at ${siteConfig.business.name}`}
           </DialogTitle>
         </DialogHeader>
 

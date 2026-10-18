@@ -265,6 +265,36 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          approved: boolean | null
+          created_at: string | null
+          email: string | null
+          id: string
+          role: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          approved?: boolean | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          role?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          approved?: boolean | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          role?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       restaurant_categories: {
         Row: {
           created_at: string
