@@ -154,7 +154,7 @@ export const inviteUser = async (email: string, role: UserRole, fullName?: strin
   // First, create the auth user
   const { data: authData, error: authError } = await supabase.auth.admin.createUser({
     email,
-    password: 'temp-password-123', // User will need to reset this
+    password: 'Finnegan', // User will need to reset this
     email_confirm: true,
     user_metadata: {
       full_name: fullName,

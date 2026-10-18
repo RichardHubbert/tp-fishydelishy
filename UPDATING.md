@@ -1,10 +1,18 @@
 # Updating Client Sites from Core
 
+<<<<<<< HEAD
 This guide explains how to push new features, bug fixes, and improvements from the **upstream core** (tp-core) to individual client restaurant sites.
 
 ## Overview
 
 The tp-core repository serves as the **single source of truth** for all shared functionality. When you build a new feature or fix a bug here, you can roll it out to all client sites with one command.
+=======
+This guide explains how to push new features, bug fixes, and improvements from the **upstream core** (tp-woodman) to individual client restaurant sites.
+
+## Overview
+
+The tp-woodman repository serves as the **single source of truth** for all shared functionality. When you build a new feature or fix a bug here, you can roll it out to all client sites with one command.
+>>>>>>> woodman/main
 
 **Key Principle:** Client-specific values (restaurant names, colors, contact info, brand assets) live in `src/config/site.ts` and `public/brand/`. Everything else is shared code that gets updated from this core repository.
 
@@ -14,10 +22,17 @@ The tp-core repository serves as the **single source of truth** for all shared f
 
 ### 1. Develop in the Core Repository
 
+<<<<<<< HEAD
 Work on new features in `tp-core` (this repo):
 
 ```bash
 cd tp-core
+=======
+Work on new features in `tp-woodman` (this repo):
+
+```bash
+cd tp-woodman
+>>>>>>> woodman/main
 git checkout -b feature/new-booking-flow
 # ... make your changes ...
 git add .
@@ -48,7 +63,11 @@ npm run update-from-core
 ```
 
 That's it! The script will:
+<<<<<<< HEAD
 - Fetch the latest changes from `tp-core`
+=======
+- Fetch the latest changes from `tp-woodman`
+>>>>>>> woodman/main
 - Merge them into the current branch
 - Keep the client's `site.ts` and brand assets untouched
 - Run `npm install` and `npm run build`
@@ -210,7 +229,11 @@ Now the client can receive updates normally.
 ## Best Practices
 
 ### ✅ DO:
+<<<<<<< HEAD
 - Build new features in the **core** (`tp-core`)
+=======
+- Build new features in the **core** (`tp-woodman`)
+>>>>>>> woodman/main
 - Keep client-specific values in `src/config/site.ts`
 - Use the config throughout the codebase: `import { siteConfig } from '@/config/site'`
 - Test updates in a local client repo before pushing to production
@@ -228,12 +251,38 @@ Now the client can receive updates normally.
 
 ---
 
+<<<<<<< HEAD
 ## Core Repository
 
 The core repository is located at:
 - https://github.com/RichardHubbert/tp-core
 
 This is the neutral upstream that all client sites pull updates from.
+=======
+## Renaming the Core Repository
+
+Consider renaming `tp-woodman` to something neutral like `tablepilot-core` to better reflect its role. GitHub automatically redirects the old URL, so existing clones keep working.
+
+### Steps to Rename:
+
+1. **On GitHub:**
+   - Go to https://github.com/RichardHubbert/tp-woodman
+   - Settings → Rename repository → `tablepilot-core`
+
+2. **Update the remote URL** in this repo:
+   ```bash
+   git remote set-url origin https://github.com/RichardHubbert/tablepilot-core.git
+   ```
+
+3. **Update `scripts/link-to-core.sh`:**
+   Change the `CORE_REPO_URL` variable to the new URL.
+
+4. **Update client repos:**
+   In each client, run:
+   ```bash
+   git remote set-url core https://github.com/RichardHubbert/tablepilot-core.git
+   ```
+>>>>>>> woodman/main
 
 ---
 
@@ -288,7 +337,11 @@ git push origin main
 ```
 
 ### Building New Features
+<<<<<<< HEAD
 1. Develop in `tp-core` (core)
+=======
+1. Develop in `tp-woodman` (core)
+>>>>>>> woodman/main
 2. Merge to `main`
 3. For each client: `npm run update-from-core`
 4. Test and deploy

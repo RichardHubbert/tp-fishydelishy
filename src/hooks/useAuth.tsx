@@ -1,5 +1,6 @@
 
 import { useState, useEffect, createContext, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import type { User, Session } from '@supabase/supabase-js';
 
@@ -24,6 +25,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+
+        // When a password reset link is clicked, redirect to /auth
+        // so the reset-password form is shown regardless of which page loaded
+        if (event === 'PASSWORD_RECOVERY') {
+          window.location.href = '/auth';
+        }
       }
     );
 

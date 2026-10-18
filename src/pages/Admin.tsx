@@ -1,5 +1,5 @@
 import React from 'react';
-import { LogOut } from 'lucide-react';
+import { ArrowLeft, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import AdminDashboard from '@/components/AdminDashboard';
 import UserMenu from '@/components/UserMenu';
@@ -37,16 +37,16 @@ const Admin = () => {
           <h1 className="text-xl md:text-2xl font-bold text-gray-900">Admin Dashboard</h1>
           
           <div className="flex items-center gap-2 md:gap-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate('/')}
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Landing page
+            </Button>
             {user ? (
               <>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => window.location.href = '/'}
-                  className="hidden md:flex"
-                >
-                  Back to Home
-                </Button>
                 <UserMenu />
                 <Button 
                   variant="outline" 

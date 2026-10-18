@@ -9,7 +9,11 @@
 set -e
 
 # Core repository URL - change this if the core repo is renamed
+<<<<<<< HEAD
 CORE_REPO_URL="https://github.com/RichardHubbert/tp-core.git"
+=======
+CORE_REPO_URL="https://github.com/RichardHubbert/tp-woodman.git"
+>>>>>>> woodman/main
 
 echo "🔗 Linking to upstream core repository..."
 echo "Core URL: $CORE_REPO_URL"

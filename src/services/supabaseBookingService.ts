@@ -28,6 +28,9 @@ export interface Booking {
     id: string;
     name: string;
     cuisine: string;
+    address?: string;
+    phone?: string | null;
+    email?: string | null;
   };
 }
 
