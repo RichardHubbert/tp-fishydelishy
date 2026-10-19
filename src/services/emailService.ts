@@ -1,136 +1,116 @@
-import emailjs from '@emailjs/browser';
+import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
-import { Booking } from './supabaseBookingService';
-import { siteConfig } from '@/config/site';
 
-// EmailJS service configuration
-const SERVICE_ID = 'service_fvy9wzm'; // EmailJS service ID
-const TEMPLATE_ID = 'template_hvudejb'; // TODO: Replace with your actual EmailJS template ID from dashboard
-const PUBLIC_KEY = 'CrvLAsC5DKRwVy5jR'; // EmailJS public key
+export interface Booking {
+  id: string;
+  customer_name: string;
+  customer_email: string;
+  customer_phone?: string;
+  booking_date: string;
+  start_time: string;
+  party_size: number;
+  special_requests?: string;
+  restaurant_id?: string;
+  restaurant?: {
+    name: string;
+    address?: string;
+    phone?: string;
+    email?: string;
+  };
+}
 
 /**
- * Format a booking date and time for display in emails
- */
-const formatBookingDateTime = (date: string, time: string): string => {
-  const bookingDate = new Date(date);
-  const formattedDate = format(bookingDate, 'EEEE, MMMM do, yyyy');
-  return `${formattedDate} at ${time}`;
-};
-
-/**
- * Send a booking confirmation email to the customer
+ * Send booking confirmation email via Supabase edge function using Resend
+ * Uses "Table Pilot" as sender and includes restaurant details from DB
  */
 export const sendBookingConfirmationEmail = async (booking: Booking): Promise<{ success: boolean; error?: string }> => {
   try {
-    console.log('📧 Preparing to send booking confirmation email...');
-    console.log('📧 EmailJS Config:', { SERVICE_ID, TEMPLATE_ID, PUBLIC_KEY });
+    console.log('📧 Sending booking confirmation email via Supabase edge function...');
     
-    // Format the booking date and time for the email
-    const formattedDateTime = formatBookingDateTime(booking.booking_date, booking.start_time);
+    // Format booking date/time
+    const bookingDateTime = `${format(new Date(booking.booking_date), 'EEEE, MMMM do, yyyy')} at ${booking.start_time}`;
     
-    // Prepare template parameters
-    const templateParams = {
+    // Prepare email payload
+    const emailPayload = {
       to_name: booking.customer_name,
       to_email: booking.customer_email,
       booking_id: booking.id,
-      booking_date_time: formattedDateTime,
+      booking_date_time: bookingDateTime,
       party_size: booking.party_size,
       special_requests: booking.special_requests || 'None',
-      restaurant_name: siteConfig.business.name,
-      restaurant_address: siteConfig.contact.address,
-      restaurant_phone: siteConfig.contact.phone,
-      restaurant_email: siteConfig.contact.email,
+      restaurant_name: booking.restaurant?.name || 'Table Pilot',
+      restaurant_address: booking.restaurant?.address || '',
+      restaurant_phone: booking.restaurant?.phone || '',
+      restaurant_email: booking.restaurant?.email || '',
     };
     
-    console.log('📧 Sending confirmation email with params:', templateParams);
+    console.log('📧 Email payload:', emailPayload);
     
-    // Send the email using EmailJS
-    const response = await emailjs.send(
-      SERVICE_ID,
-      TEMPLATE_ID,
-      templateParams,
-      PUBLIC_KEY
-    );
-    
-    console.log('✅ Email sent successfully:', response);
-    return { success: true };
-  } catch (error) {
-    console.error('❌ Failed to send confirmation email:', error);
-    
-    // Provide more detailed error information
-    let errorMessage = 'Unknown error';
-    if (error instanceof Error) {
-      errorMessage = error.message;
-    } else if (typeof error === 'object' && error !== null) {
-      errorMessage = JSON.stringify(error);
-    }
-    
-    console.error('❌ Email error details:', {
-      error,
-      errorMessage,
-      serviceId: SERVICE_ID,
-      templateId: TEMPLATE_ID,
-      publicKey: PUBLIC_KEY?.substring(0, 10) + '...'
+    // Call Supabase edge function
+    const { data, error } = await supabase.functions.invoke('send-booking-email', {
+      body: emailPayload,
     });
     
-    return { success: false, error: errorMessage };
-  }
-};
-
-/**
- * Initialize EmailJS
- */
-export const initEmailService = (): void => {
-  try {
-    emailjs.init(PUBLIC_KEY);
-    console.log('📧 EmailJS service initialized successfully');
-    console.log('📧 EmailJS config:', { SERVICE_ID, TEMPLATE_ID, PUBLIC_KEY: PUBLIC_KEY?.substring(0, 10) + '...' });
+    if (error) {
+      console.error('❌ Error from edge function:', error);
+      return {
+        success: false,
+        error: 'Unable to send confirmation email. Your booking is confirmed, but the email failed to send.'
+      };
+    }
+    
+    console.log('✅ Email sent successfully:', data);
+    return { success: true };
+    
   } catch (error) {
-    console.error('❌ Failed to initialize EmailJS:', error);
+    console.error('❌ Failed to send booking confirmation email:', error);
+    return {
+      success: false,
+      error: 'Unable to send confirmation email. Your booking is confirmed, but the email failed to send.'
+    };
   }
 };
 
 /**
- * Test EmailJS configuration
+ * Test email service - sends a test email to verify configuration
  */
 export const testEmailService = async (): Promise<{ success: boolean; error?: string }> => {
   try {
-    console.log('🧪 Testing EmailJS configuration...');
+    console.log('🧪 Testing email service via Supabase edge function...');
     
-    const testParams = {
+    const testPayload = {
       to_name: 'Test User',
-      to_email: 'test@example.com',
-      booking_id: 'TEST-123',
-      booking_date_time: 'Test Date and Time',
+      to_email: 'richardhubbert@gmail.com',
+      booking_id: 'TEST-' + Date.now(),
+      booking_date_time: format(new Date(), 'EEEE, MMMM do, yyyy') + ' at 19:00',
       party_size: 2,
-      special_requests: 'Test request',
-      restaurant_name: 'Test Restaurant',
-      restaurant_address: 'Test Address, London, UK',
-      restaurant_phone: '+44 20 7946 0958',
-      restaurant_email: 'test@restaurant.com',
+      special_requests: 'This is a test email from the admin dashboard',
+      restaurant_name: 'Table Pilot Test',
+      restaurant_address: 'Test Address',
+      restaurant_phone: '01234 567890',
+      restaurant_email: 'test@example.com',
     };
     
-    console.log('🧪 Test params:', testParams);
+    const { data, error } = await supabase.functions.invoke('send-booking-email', {
+      body: testPayload,
+    });
     
-    const response = await emailjs.send(
-      SERVICE_ID,
-      TEMPLATE_ID,
-      testParams,
-      PUBLIC_KEY
-    );
-    
-    console.log('✅ EmailJS test successful:', response);
-    return { success: true };
-  } catch (error) {
-    console.error('❌ EmailJS test failed:', error);
-    
-    let errorMessage = 'Unknown error';
-    if (error instanceof Error) {
-      errorMessage = error.message;
-    } else if (typeof error === 'object' && error !== null) {
-      errorMessage = JSON.stringify(error);
+    if (error) {
+      console.error('❌ Test email failed:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to send test email'
+      };
     }
     
-    return { success: false, error: errorMessage };
+    console.log('✅ Test email sent successfully:', data);
+    return { success: true };
+    
+  } catch (error) {
+    console.error('❌ Email service test error:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
   }
 };
