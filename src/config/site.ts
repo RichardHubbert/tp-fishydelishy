@@ -153,16 +153,17 @@ export const siteConfig = {
     // Default "from" name for booking confirmations
     // Actual email address is set in Supabase secrets (RESEND_FROM)
     fromName: "Fishy Delishy",
-    defaultFromEmail: "onboarding@resend.dev",  // Fallback only
+    defaultFromEmail: "bookings@tablepilot.co.uk",  // Fallback only
   },
 
   // ============================================
   // DATABASE IDS (Client-specific)
   // ============================================
   ids: {
+    // TODO: Set these to Fishy Delishy's actual restaurant UUID after setup
     // Shared bookings table. This site's rows are the ones with these ids.
-    businessId: "9da1ed04-cb17-4428-82fd-396113775bdf",
-    restaurantId: "9da1ed04-cb17-4428-82fd-396113775bdf",
+    businessId: "",
+    restaurantId: "",
     slug: "fishydelishy",
   },
 

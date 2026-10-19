@@ -4,47 +4,55 @@ import { supabase } from '@/integrations/supabase/client';
 
 export const useAdmin = () => {
   const { user } = useAuth();
-  const [userRole, setUserRole] = useState<string | null>(null);
+  const [isAdminUser, setIsAdminUser] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const fetchUserRole = async () => {
+    const checkAdminStatus = async () => {
       if (!user) {
-        setUserRole(null);
+        setIsAdminUser(false);
         setIsLoading(false);
         return;
       }
 
       try {
-        const { data, error } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', user.id)
-          .maybeSingle();
+        // First try the tp_is_admin() RPC function
+        const { data: rpcData, error: rpcError } = await supabase
+          .rpc('tp_is_admin');
 
-        if (error) {
-          console.error('Error fetching user role:', error);
-          setUserRole(null);
+        if (!rpcError && rpcData !== null) {
+          setIsAdminUser(rpcData === true);
+          setIsLoading(false);
+          return;
+        }
+
+        // Fallback: check profiles.role directly
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+
+        if (profileError) {
+          console.error('Error fetching user role:', profileError);
+          setIsAdminUser(false);
         } else {
-          setUserRole(data?.role || null);
+          setIsAdminUser(profileData?.role === 'admin');
         }
       } catch (error) {
-        console.error('Error fetching user role:', error);
-        setUserRole(null);
+        console.error('Error checking admin status:', error);
+        setIsAdminUser(false);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchUserRole();
+    checkAdminStatus();
   }, [user]);
 
   const isAdmin = useMemo(() => {
-    if (!user || !userRole) return false;
-    
-    // Check if user has admin role or is the original admin email
-    return userRole === 'admin' || user.email === 'richardhubbert@gmail.com';
-  }, [user, userRole]);
+    return isAdminUser;
+  }, [isAdminUser]);
 
-  return { isAdmin, user, userRole, isLoading };
+  return { isAdmin, user, isLoading };
 }; 

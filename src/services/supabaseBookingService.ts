@@ -1,16 +1,10 @@
 import { supabase } from '@/integrations/supabase/client';
-import { format, addMinutes, isSameDay } from 'date-fns';
+import { format, addMinutes } from 'date-fns';
 import { sendCustomerToCRM } from './crmService';
 import { siteConfig } from '@/config/site';
 
 export interface Table {
   id: string;
-  name: string;
-  capacity: number;
-  section: string;
-}
-
-export interface TableInput {
   name: string;
   capacity: number;
   section: string;
@@ -34,9 +28,6 @@ export interface Booking {
     id: string;
     name: string;
     cuisine: string;
-    address?: string;
-    phone?: string | null;
-    email?: string | null;
   };
 }
 
@@ -57,17 +48,13 @@ export const fetchTables = async (): Promise<Table[]> => {
   return data || [];
 };
 
-// Fetch bookings for a specific date
+// Fetch bookings for a specific date using the RPC function
 export const fetchBookingsForDate = async (date: Date): Promise<Booking[]> => {
   const dateString = format(date, 'yyyy-MM-dd');
-  console.log('Fetching bookings for date:', dateString);
+  console.log('Fetching bookings for date via RPC:', dateString);
   
   const { data, error } = await supabase
-    .from('bookings')
-    .select('*')
-    .eq('booking_date', dateString)
-    .eq('status', 'confirmed')
-    .eq('restaurant_id', siteConfig.ids.restaurantId);
+    .rpc('get_booking_availability', { p_date: dateString });
   
   if (error) {
     console.error('Error fetching bookings:', error);
@@ -82,16 +69,28 @@ export const fetchBookingsForDate = async (date: Date): Promise<Booking[]> => {
   }));
 };
 
-// Generate time slots from 11:00 AM to 7:30 PM (every 30 minutes)
+// Generate time slots based on config opening hours
 export const generateTimeSlots = (): string[] => {
   const slots: string[] = [];
-  const startHour = 11; // 11 AM
-  const endHour = 19; // 7 PM
-  const endMinute = 30; // 7:30 PM
-
+  
+  // Parse lastBooking from config (e.g., "10:00 PM" -> 22:00)
+  const lastBooking = siteConfig.hours.lastBooking;
+  const [time, period] = lastBooking.split(' ');
+  const [hours, minutes] = time.split(':').map(Number);
+  
+  let endHour = hours;
+  if (period === 'PM' && hours !== 12) {
+    endHour = hours + 12;
+  } else if (period === 'AM' && hours === 12) {
+    endHour = 0;
+  }
+  
+  // Start at 9:00 AM (from display hours "Daily: 9:00 AM - 11:00 PM")
+  const startHour = 9;
+  
   for (let hour = startHour; hour <= endHour; hour++) {
     for (let minute = 0; minute < 60; minute += 30) {
-      if (hour === endHour && minute > endMinute) break;
+      if (hour === endHour && minute > (minutes || 0)) break;
       
       const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
       slots.push(timeString);
@@ -218,13 +217,17 @@ export const createBooking = async (bookingData: {
     const endDate = addMinutes(startDate, 150); // 2.5 hours
     const endTime = format(endDate, 'HH:mm');
     
-    // Insert booking into Supabase
-    const { data, error } = await supabase
+    // Generate client-side UUID for the booking
+    const bookingId = crypto.randomUUID();
+    
+    // Insert booking into Supabase (without .select() due to RLS restrictions)
+    const { error } = await supabase
       .from('bookings')
       .insert({
+        id: bookingId,
         table_id: optimalTable.id,
-        restaurant_id: siteConfig.ids.restaurantId,
-        business_id: siteConfig.ids.businessId,
+        restaurant_id: bookingData.restaurantId || null,
+        business_id: siteConfig.ids.businessId || null,
         customer_name: bookingData.customerName,
         customer_email: bookingData.customerEmail,
         customer_phone: bookingData.customerPhone,
@@ -234,24 +237,36 @@ export const createBooking = async (bookingData: {
         party_size: bookingData.partySize,
         status: 'confirmed',
         special_requests: bookingData.specialRequests
-      })
-      .select()
-      .single();
+      });
     
     if (error) {
       console.error('❌ Error inserting booking:', error);
       throw error;
     }
     
-    console.log('✅ Booking created successfully:', data);
+    console.log('✅ Booking created successfully with ID:', bookingId);
+    
+    // Construct the booking object to return
+    const booking: Booking = {
+      id: bookingId,
+      table_id: optimalTable.id,
+      restaurant_id: bookingData.restaurantId,
+      customer_name: bookingData.customerName,
+      customer_email: bookingData.customerEmail,
+      customer_phone: bookingData.customerPhone,
+      booking_date: format(bookingData.date, 'yyyy-MM-dd'),
+      start_time: bookingData.startTime,
+      end_time: endTime,
+      party_size: bookingData.partySize,
+      status: 'confirmed',
+      special_requests: bookingData.specialRequests,
+      created_at: new Date().toISOString()
+    };
     
     // Send customer data to CRM (fire and forget - don't block booking creation)
     try {
       console.log('📧 Sending customer data to CRM...');
-      console.log('🏢 Business ID from booking data:', data.business_id);
-      // Use the correct CRM business ID - this is different from the booking platform business ID
-      // The CRM edge function will map restaurant IDs to CRM business IDs
-      const crmBusinessId = '9c38d437-b6c9-425a-9199-d514007fcb63'; // This is the CRM business ID
+      const crmBusinessId = '9c38d437-b6c9-425a-9199-d514007fcb63'; // CRM business ID
       
       const crmResult = await sendCustomerToCRM({
         customerName: bookingData.customerName,
@@ -262,8 +277,8 @@ export const createBooking = async (bookingData: {
         bookingDate: format(bookingData.date, 'yyyy-MM-dd'),
         startTime: bookingData.startTime,
         partySize: bookingData.partySize,
-        bookingId: data.id,
-        businessId: crmBusinessId // Use the correct CRM business ID
+        bookingId: bookingId,
+        businessId: crmBusinessId
       });
       
       if (crmResult.success) {
@@ -276,7 +291,7 @@ export const createBooking = async (bookingData: {
       // Don't throw error - booking was successful, CRM sync is secondary
     }
     
-    return data as Booking;
+    return booking;
   } catch (error) {
     console.error('💥 Booking creation failed:', error);
     throw error;
@@ -289,7 +304,6 @@ export const fetchAllBookings = async (): Promise<Booking[]> => {
   const { data, error } = await supabase
     .from('bookings')
     .select(`*, restaurant:restaurant_id (id, name, cuisine)`)
-    .eq('restaurant_id', siteConfig.ids.restaurantId)
     .order('booking_date', { ascending: true })
     .order('start_time', { ascending: true });
 
@@ -335,68 +349,6 @@ export const getNextReservationForTable = (tableId: string, allBookings: Booking
   return futureBookings.length > 0 ? futureBookings[0] : null;
 };
 
-export const createTable = async (input: TableInput): Promise<Table> => {
-  const { data, error } = await supabase
-    .from('tables')
-    .insert({
-      name: input.name.trim(),
-      capacity: input.capacity,
-      section: input.section.trim(),
-    })
-    .select()
-    .single();
-
-  if (error) {
-    console.error('Error creating table:', error);
-    throw error;
-  }
-
-  return data;
-};
-
-export const updateTable = async (id: string, input: TableInput): Promise<Table> => {
-  const { data, error } = await supabase
-    .from('tables')
-    .update({
-      name: input.name.trim(),
-      capacity: input.capacity,
-      section: input.section.trim(),
-    })
-    .eq('id', id)
-    .select()
-    .single();
-
-  if (error) {
-    console.error('Error updating table:', error);
-    throw error;
-  }
-
-  return data;
-};
-
-export const deleteTable = async (id: string): Promise<void> => {
-  const { error: bookingError } = await supabase
-    .from('bookings')
-    .delete()
-    .eq('table_id', id)
-    .eq('restaurant_id', siteConfig.ids.restaurantId);
-
-  if (bookingError) {
-    console.error('Error deleting bookings for table:', bookingError);
-    throw bookingError;
-  }
-
-  const { error } = await supabase
-    .from('tables')
-    .delete()
-    .eq('id', id);
-
-  if (error) {
-    console.error('Error deleting table:', error);
-    throw error;
-  }
-};
-
 // Delete a booking by ID
 export const deleteBooking = async (id: string): Promise<void> => {
   const { error } = await supabase
@@ -424,41 +376,47 @@ export const updateBooking = async (id: string, updates: Partial<Booking>): Prom
   return data as Booking;
 };
 
-export const placeBooking = async (booking: {
-  restaurantId?: string;
-  tableId: string;
-  date: string;
-  startTime: string;
-  endTime: string;
-  partySize: number;
-  customerName: string;
-  customerEmail: string;
-  customerPhone?: string;
-  specialRequests?: string;
-}): Promise<Booking> => {
+// Create a new table
+export const createTable = async (table: Omit<Table, 'id'>): Promise<Table> => {
   const { data, error } = await supabase
-    .from('bookings')
-    .insert({
-      table_id: booking.tableId,
-      restaurant_id: siteConfig.ids.restaurantId,
-      business_id: siteConfig.ids.businessId,
-      customer_name: booking.customerName,
-      customer_email: booking.customerEmail,
-      customer_phone: booking.customerPhone || null,
-      booking_date: booking.date,
-      start_time: booking.startTime,
-      end_time: booking.endTime,
-      party_size: booking.partySize,
-      status: 'confirmed',
-      special_requests: booking.specialRequests || null,
-    })
+    .from('tables')
+    .insert(table)
     .select()
     .single();
-
   if (error) {
-    console.error('Error placing booking:', error);
+    console.error('Error creating table:', error);
     throw error;
   }
-
-  return data as Booking;
+  return data as Table;
 };
+
+// Update a table by ID
+export const updateTable = async (id: string, updates: Partial<Table>): Promise<Table> => {
+  const { data, error } = await supabase
+    .from('tables')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) {
+    console.error('Error updating table:', error);
+    throw error;
+  }
+  return data as Table;
+};
+
+// Delete a table by ID
+export const deleteTable = async (id: string): Promise<void> => {
+  const { error } = await supabase
+    .from('tables')
+    .delete()
+    .eq('id', id);
+  if (error) {
+    console.error('Error deleting table:', error);
+    throw error;
+  }
+};
+
+// Alias for createBooking (for backward compatibility)
+export const placeBooking = createBooking;
+

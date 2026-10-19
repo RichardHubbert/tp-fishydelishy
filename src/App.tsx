@@ -12,6 +12,7 @@ import Auth from "./pages/Auth";
 import RestaurantManagement from "./pages/RestaurantManagement";
 import UserManagement from "./pages/UserManagement";
 import NotFound from "./pages/NotFound";
+import AdminGuard from "./components/AdminGuard";
 
 const queryClient = new QueryClient();
 
@@ -35,9 +36,9 @@ const App = () => (
           <BrowserRouter basename={getBasename()}>
             <Routes>
               <Route path="/" element={<Index />} />
-              <Route path="/admin" element={<Admin />} />
-              <Route path="/restaurants" element={<RestaurantManagement />} />
-              <Route path="/users" element={<UserManagement />} />
+              <Route path="/admin" element={<AdminGuard><Admin /></AdminGuard>} />
+              <Route path="/restaurants" element={<AdminGuard><RestaurantManagement /></AdminGuard>} />
+              <Route path="/users" element={<AdminGuard><UserManagement /></AdminGuard>} />
               <Route path="/auth" element={<Auth />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />

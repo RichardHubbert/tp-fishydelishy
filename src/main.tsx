@@ -1,11 +1,7 @@
 import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
-import { initEmailService } from './services/emailService'
 import { siteConfig } from './config/site'
-
-// Initialize email service
-initEmailService();
 
 // Update document title and meta tags from config
 document.title = siteConfig.seo.title;

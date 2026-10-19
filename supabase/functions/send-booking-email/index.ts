@@ -188,7 +188,7 @@ Deno.serve(async (req) => {
     const phone = body.restaurant_phone?.trim() || "";
     const restaurantEmail = body.restaurant_email?.trim() || "";
     const bookingId = body.booking_id?.trim() || "";
-    const from = Deno.env.get("RESEND_FROM") || "Your Restaurant <onboarding@resend.dev>";  // Default fallback
+    const from = Deno.env.get("RESEND_FROM") || "Table Pilot <bookings@tablepilot.co.uk>";  // Default fallback
 
     const message = buildBookingEmail({
       restaurantName,
