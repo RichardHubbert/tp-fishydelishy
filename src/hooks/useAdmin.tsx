@@ -16,17 +16,28 @@ export const useAdmin = () => {
       }
 
       try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('user_id', user.id)
-          .single();
+        // Use tp_is_admin RPC to check admin status
+        const { data: isAdminResult, error: rpcError } = await supabase
+          .rpc('tp_is_admin');
 
-        if (error) {
-          console.error('Error fetching user role:', error);
-          setUserRole(null);
+        if (rpcError) {
+          console.error('Error checking admin status via RPC:', rpcError);
+          // Fallback: read user's own profile
+          const { data: profileData, error: profileError } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('user_id', user.id)
+            .single();
+
+          if (profileError) {
+            console.error('Error fetching user profile:', profileError);
+            setUserRole(null);
+          } else {
+            setUserRole(profileData?.role || null);
+          }
         } else {
-          setUserRole(data?.role || null);
+          // RPC succeeded, set role based on result
+          setUserRole(isAdminResult ? 'admin' : 'user');
         }
       } catch (error) {
         console.error('Error fetching user role:', error);

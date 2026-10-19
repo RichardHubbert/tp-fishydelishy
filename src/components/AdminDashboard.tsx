@@ -38,8 +38,15 @@ const AdminDashboard = () => {
       try {
         setLoading(true);
         console.log('Loading admin dashboard data...');
-        // Scope to this site's restaurant ID from config
+        
+        // Check if restaurant is configured
         const restaurantId = siteConfig.ids.restaurantId;
+        if (!restaurantId) {
+          setError('Restaurant not configured. Please set ids.restaurantId in src/config/site.ts');
+          setLoading(false);
+          return;
+        }
+        
         const [tablesData, bookingsData, restaurantsData] = await Promise.all([
           fetchTables(),
           fetchAllBookings(),
@@ -52,6 +59,12 @@ const AdminDashboard = () => {
         // Filter to only this site's restaurant
         const siteRestaurant = restaurantsData.filter(r => r.id === restaurantId);
         const siteBookings = bookingsData.filter(b => b.restaurant_id === restaurantId);
+        
+        if (siteRestaurant.length === 0) {
+          setError(`Restaurant UUID ${restaurantId} not found in database. Please verify ids.restaurantId in src/config/site.ts`);
+          setLoading(false);
+          return;
+        }
         
         setTables(tablesData);
         setAllBookings(siteBookings);

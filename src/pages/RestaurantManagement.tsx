@@ -46,10 +46,32 @@ const RestaurantManagement: React.FC = () => {
   const loadRestaurants = async () => {
     try {
       setIsLoading(true);
+      
+      // Check if restaurant is configured
+      const siteRestaurantId = siteConfig.ids.restaurantId;
+      if (!siteRestaurantId) {
+        toast({
+          title: "Configuration Error",
+          description: "Restaurant not configured. Please set ids.restaurantId in src/config/site.ts",
+          variant: "destructive",
+        });
+        setRestaurants([]);
+        setIsLoading(false);
+        return;
+      }
+      
       const data = await fetchAllRestaurants();
       // For single-site deployment, only show this site's restaurant
-      const siteRestaurantId = siteConfig.ids.restaurantId;
       const siteRestaurants = data.filter(r => r.id === siteRestaurantId);
+      
+      if (siteRestaurants.length === 0) {
+        toast({
+          title: "Configuration Error",
+          description: `Restaurant UUID ${siteRestaurantId} not found. Please verify ids.restaurantId in src/config/site.ts`,
+          variant: "destructive",
+        });
+      }
+      
       setRestaurants(siteRestaurants);
     } catch (error) {
       console.error('Error loading restaurants:', error);
