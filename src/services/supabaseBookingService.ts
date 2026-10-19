@@ -75,12 +75,20 @@ export const fetchBookingsForDate = async (date: Date): Promise<Booking[]> => {
   }));
 };
 
-// Generate time slots from 11:00 AM to 7:30 PM (every 30 minutes)
+// Generate time slots from config opening hours
 export const generateTimeSlots = (): string[] => {
   const slots: string[] = [];
-  const startHour = 11; // 11 AM
-  const endHour = 19; // 7 PM
-  const endMinute = 30; // 7:30 PM
+  // Parse opening hours from config - "Daily: 9:00 AM - 11:00 PM"
+  const startHour = 9; // 9 AM
+  const lastBookingTime = siteConfig.hours.lastBooking; // "10:00 PM"
+  const [lastHour, lastMinute] = lastBookingTime.split(':').map(s => {
+    const num = parseInt(s.replace(/[^0-9]/g, ''));
+    return s.includes('PM') && num !== 12 ? num + 12 : num;
+  });
+  
+  // Default to 22:00 (10 PM) if parsing fails
+  const endHour = lastHour || 22;
+  const endMinute = lastMinute || 0;
 
   for (let hour = startHour; hour <= endHour; hour++) {
     for (let minute = 0; minute < 60; minute += 30) {

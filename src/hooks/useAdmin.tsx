@@ -41,9 +41,7 @@ export const useAdmin = () => {
 
   const isAdmin = useMemo(() => {
     if (!user || !userRole) return false;
-    
-    // Check if user has admin role or is the original admin email
-    return userRole === 'admin' || user.email === 'richardhubbert@gmail.com';
+    return userRole === 'admin';
   }, [user, userRole]);
 
   return { isAdmin, user, userRole, isLoading };

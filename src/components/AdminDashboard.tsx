@@ -10,6 +10,7 @@ import { useAdmin } from '@/hooks/useAdmin';
 import { Dialog, DialogContent, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { fetchRestaurants, Restaurant } from '@/services/restaurantService';
 import { testEmailService } from '@/services/emailService';
+import { siteConfig } from '@/config/site';
 import CRMTestButton from '@/components/CRMTestButton';
 import NewCustomerCRMTestButton from '@/components/NewCustomerCRMTestButton';
 import DashboardRestaurants from '@/components/DashboardRestaurants';
@@ -37,6 +38,8 @@ const AdminDashboard = () => {
       try {
         setLoading(true);
         console.log('Loading admin dashboard data...');
+        // Scope to this site's restaurant ID from config
+        const restaurantId = siteConfig.ids.restaurantId;
         const [tablesData, bookingsData, restaurantsData] = await Promise.all([
           fetchTables(),
           fetchAllBookings(),
@@ -45,9 +48,14 @@ const AdminDashboard = () => {
         console.log('Tables loaded:', tablesData);
         console.log('Bookings loaded:', bookingsData);
         console.log('Restaurants loaded:', restaurantsData);
+        
+        // Filter to only this site's restaurant
+        const siteRestaurant = restaurantsData.filter(r => r.id === restaurantId);
+        const siteBookings = bookingsData.filter(b => b.restaurant_id === restaurantId);
+        
         setTables(tablesData);
-        setAllBookings(bookingsData);
-        setRestaurants(restaurantsData);
+        setAllBookings(siteBookings);
+        setRestaurants(siteRestaurant);
       } catch (err) {
         console.error('Error loading dashboard data:', err);
         setError('Failed to load dashboard data: ' + (err instanceof Error ? err.message : String(err)));

@@ -1,8 +1,7 @@
-<<<<<<< HEAD
 # .gitattributes for Table Pilot Client Sites
 #
 # This file defines merge strategies to prevent conflicts when updating
-# from the core tp-woodman repository.
+# from the core repository.
 
 # Client-specific config: always keep ours during merge from core
 src/config/site.ts merge=ours
@@ -12,17 +11,6 @@ public/brand/** merge=ours
 
 # Environment example: manual review recommended but prefer ours
 .env.example merge=ours
-=======
-# Client-Specific Files: Preserve during upstream merges
-# These files should not be overwritten when pulling updates from core
-
-# Site configuration
-src/config/site.ts merge=ours
-
-# Brand assets
-public/brand/** merge=ours
-
-# Environment files are already in .gitignore, but adding for clarity
 .env merge=ours
 .env.local merge=ours
 
@@ -31,4 +19,4 @@ public/brand/** merge=ours
 # 
 # This tells git to keep "our" version (the client's version) of these files
 # during merges from the upstream core repository.
->>>>>>> woodman/main
+

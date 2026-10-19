@@ -18,6 +18,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { useAdmin } from '@/hooks/useAdmin';
 import { Restaurant, fetchAllRestaurants, deleteRestaurant, restoreRestaurant } from '@/services/restaurantService';
+import { siteConfig } from '@/config/site';
 import RestaurantForm from '@/components/RestaurantForm';
 import NavigationHeader from '@/components/NavigationHeader';
 
@@ -46,7 +47,10 @@ const RestaurantManagement: React.FC = () => {
     try {
       setIsLoading(true);
       const data = await fetchAllRestaurants();
-      setRestaurants(data);
+      // For single-site deployment, only show this site's restaurant
+      const siteRestaurantId = siteConfig.ids.restaurantId;
+      const siteRestaurants = data.filter(r => r.id === siteRestaurantId);
+      setRestaurants(siteRestaurants);
     } catch (error) {
       console.error('Error loading restaurants:', error);
       toast({
