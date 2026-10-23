@@ -1,6 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
 import { TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
-import { siteConfig } from '@/config/site';
 
 export type User = TablesInsert<'profiles'> & { id: string };
 export type UserUpdate = TablesUpdate<'profiles'>;
@@ -154,7 +153,7 @@ export const inviteUser = async (email: string, role: UserRole, fullName?: strin
   // First, create the auth user
   const { data: authData, error: authError } = await supabase.auth.admin.createUser({
     email,
-    password: 'temp-password-123', // User will need to reset this
+    password: 'Finnegan', // User will need to reset this
     email_confirm: true,
     user_metadata: {
       full_name: fullName,
@@ -183,16 +182,16 @@ export const inviteUser = async (email: string, role: UserRole, fullName?: strin
   return await createUserProfile(profileData);
 };
 
-// Get all bookings for configured restaurant (for customer analysis)
+// Get all bookings for Amici Coffee (for customer analysis)
 export const getAmiciCoffeeBookings = async (): Promise<any[]> => {
   const { data, error } = await supabase
     .from('bookings')
     .select('*')
-    .eq('restaurant_id', siteConfig.ids.restaurantId)
+    .eq('restaurant_id', '24e2799f-60d5-4e3b-bb30-b8049c9ae56d')
     .order('created_at', { ascending: false });
 
   if (error) {
-    console.error('Error fetching bookings:', error);
+    console.error('Error fetching Amici Coffee bookings:', error);
     throw error;
   }
 
@@ -205,7 +204,7 @@ export const getCustomerHistory = async (customerEmail: string): Promise<any[]> 
     .from('bookings')
     .select('*')
     .eq('customer_email', customerEmail)
-    .eq('restaurant_id', siteConfig.ids.restaurantId)
+    .eq('restaurant_id', '24e2799f-60d5-4e3b-bb30-b8049c9ae56d')
     .order('booking_date', { ascending: false })
     .order('start_time', { ascending: false });
 
@@ -217,16 +216,16 @@ export const getCustomerHistory = async (customerEmail: string): Promise<any[]> 
   return data || [];
 };
 
-// Get unique customers for configured restaurant
+// Get unique customers for Amici Coffee
 export const getAmiciCoffeeCustomers = async (): Promise<any[]> => {
   const { data, error } = await supabase
     .from('bookings')
     .select('customer_email, customer_name, customer_phone')
-    .eq('restaurant_id', siteConfig.ids.restaurantId)
+    .eq('restaurant_id', '24e2799f-60d5-4e3b-bb30-b8049c9ae56d')
     .neq('status', 'cancelled');
 
   if (error) {
-    console.error('Error fetching customers:', error);
+    console.error('Error fetching Amici Coffee customers:', error);
     throw error;
   }
 

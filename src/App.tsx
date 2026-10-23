@@ -12,16 +12,21 @@ import Auth from "./pages/Auth";
 import RestaurantManagement from "./pages/RestaurantManagement";
 import UserManagement from "./pages/UserManagement";
 import NotFound from "./pages/NotFound";
+import EmbedCard from "./pages/EmbedCard";
+import EmbedBook from "./pages/EmbedBook";
 
 const queryClient = new QueryClient();
 
 // Get the basename from the current pathname or config
 const getBasename = () => {
-  const pathname = window.location.pathname;
   const configBasePath = siteConfig.urls.basePath;
-  if (pathname.startsWith(configBasePath)) {
+  const pathname = window.location.pathname;
+  
+  // Check if current path starts with the configured base path
+  if (configBasePath && configBasePath !== '/' && pathname.startsWith(configBasePath)) {
     return configBasePath;
   }
+  
   return '/';
 };
 
@@ -39,6 +44,8 @@ const App = () => (
               <Route path="/restaurants" element={<RestaurantManagement />} />
               <Route path="/users" element={<UserManagement />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/embed" element={<EmbedCard />} />
+              <Route path="/book" element={<EmbedBook />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

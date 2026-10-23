@@ -22,7 +22,7 @@ import RestaurantForm from '@/components/RestaurantForm';
 import NavigationHeader from '@/components/NavigationHeader';
 
 const RestaurantManagement: React.FC = () => {
-  const { isAdmin, user } = useAdmin();
+  const { isAdmin, user, isLoading: adminLoading } = useAdmin();
   const { toast } = useToast();
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [filteredRestaurants, setFilteredRestaurants] = useState<Restaurant[]>([]);
@@ -131,6 +131,14 @@ const RestaurantManagement: React.FC = () => {
     setEditingRestaurant(undefined);
     setShowForm(true);
   };
+
+  if (adminLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600"></div>
+      </div>
+    );
+  }
 
   if (!isAdmin) {
     return (

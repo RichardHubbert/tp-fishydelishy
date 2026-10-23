@@ -10,14 +10,13 @@ import { siteConfig } from '@/config/site';
 
 interface NavigationHeaderProps {
   onBookingClick?: () => void;
+  brandName?: string;
 }
 
-const NavigationHeader = ({ onBookingClick }: NavigationHeaderProps) => {
+const NavigationHeader = ({ onBookingClick, brandName = siteConfig.business.name }: NavigationHeaderProps) => {
   const { user, signOut } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { business, branding } = siteConfig;
-  const { primary, primaryShade, lighter } = branding.colors;
 
   const handleLogout = async () => {
     try {
@@ -48,11 +47,11 @@ const NavigationHeader = ({ onBookingClick }: NavigationHeaderProps) => {
     <div className="fixed top-0 left-0 right-0 w-full z-50 bg-white border-b flex items-center justify-between px-4 py-3">
       {/* Logo/Brand */}
       <div className="flex-1 flex items-center gap-2">
-        {/* Logo Badge */}
-        <div className={`w-10 h-10 rounded-full bg-${primary}-${lighter} flex items-center justify-center shadow-md`}>
-          <span className="text-white font-bold text-lg select-none">{business.logoText}</span>
+        {/* TP Logo */}
+        <div className={`w-10 h-10 rounded-full bg-${siteConfig.branding.colors.primary}-${siteConfig.branding.colors.lighter} flex items-center justify-center shadow-md`}>
+          <span className="text-white font-bold text-lg select-none">{siteConfig.business.logoText}</span>
         </div>
-        <h1 className="text-2xl font-bold text-gray-900 ml-2">{business.name}</h1>
+        <h1 className="text-2xl font-bold text-gray-900 ml-2">{brandName}</h1>
       </div>
       
       {/* Right side navigation */}
@@ -60,6 +59,7 @@ const NavigationHeader = ({ onBookingClick }: NavigationHeaderProps) => {
         {/* Mobile Menu (only visible on mobile) */}
         <MobileMenu 
           onBookingClick={onBookingClick}
+          brandName={brandName}
         />
         
         {/* Desktop Navigation (hidden on mobile) */}

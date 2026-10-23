@@ -37,7 +37,7 @@ Before updating clients:
 
 ### 3. Roll Out to Client Sites
 
-For each client repository (e.g., `tp-amicicoffee`, `tp-fishydelishy`):
+For each client repository (e.g., `tp-woodman`, `tp-amicicoffee`, `tp-fishydelishy`):
 
 ```bash
 # Navigate to the client repo
@@ -230,10 +230,7 @@ Now the client can receive updates normally.
 
 ## Core Repository
 
-The core repository is located at:
-- https://github.com/RichardHubbert/tp-core
-
-This is the neutral upstream that all client sites pull updates from.
+The `tp-core` repository at https://github.com/RichardHubbert/tp-core is the neutral upstream template that all client sites derive from. It contains no client-specific branding or configuration.
 
 ---
 
@@ -268,7 +265,7 @@ This should have been set by `link-to-core.sh`, but double-check.
 ### Need to update the core URL
 Edit `scripts/link-to-core.sh` and change `CORE_REPO_URL`, then:
 ```bash
-git remote set-url core https://github.com/RichardHubbert/new-repo-name.git
+git remote set-url core https://github.com/RichardHubbert/tp-core.git
 ```
 
 ---
@@ -288,9 +285,9 @@ git push origin main
 ```
 
 ### Building New Features
-1. Develop in `tp-core` (core)
+1. Develop in `tp-core` (this repo)
 2. Merge to `main`
-3. For each client: `npm run update-from-core`
+3. For each client (including tp-woodman): `npm run update-from-core`
 4. Test and deploy
 
 ---

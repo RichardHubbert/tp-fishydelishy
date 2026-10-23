@@ -1,10 +1,10 @@
 # CRM Integration Setup Guide
 
-This guide explains how to set up the CRM integration to send customer booking data from TablePilotPro to your CRM application.
+This guide explains how to set up the CRM integration to send customer booking data from TP Core to your CRM application.
 
 ## Overview
 
-When a customer makes a booking in TablePilotPro, the system automatically sends their data to your CRM application via a Supabase Edge Function. This happens automatically after a successful booking is created.
+When a customer makes a booking in TP Core, the system automatically sends their data to your CRM application via a Supabase Edge Function. This happens automatically after a successful booking is created.
 
 ## Customer Data Sent to CRM
 
@@ -16,7 +16,7 @@ The following customer information is sent to your CRM:
     name: string,           // Full name from booking form
     email: string,          // Email address
     phone: string | null,   // Phone number (optional)
-    source: 'tablepilotpro_booking'
+    source: 'tp_core_booking'
   },
   booking: {
     id: string,             // Unique booking ID
@@ -37,7 +37,7 @@ The following customer information is sent to your CRM:
 
 ```bash
 # Navigate to your project directory
-cd tablepilotpro
+cd your-project-directory
 
 # Deploy the function to Supabase
 supabase functions deploy send-customer-to-crm
@@ -47,7 +47,7 @@ supabase functions deploy send-customer-to-crm
 
 Set up the following environment variables in your Supabase project:
 
-1. Go to your Supabase Dashboard: https://supabase.com/dashboard/project/mxrrvqnfxfigeofbhepv
+1. Go to your Supabase Dashboard: https://supabase.com/dashboard/project/YOUR_PROJECT_REF
 2. Navigate to Settings → Edge Functions
 3. Add the following environment variables:
 
@@ -71,12 +71,12 @@ Your CRM application needs to accept POST requests at the configured endpoint wi
     "name": "John Doe",
     "email": "john@example.com",
     "phone": "+44 20 7946 0958",
-    "source": "tablepilotpro_booking"
+    "source": "tp_core_booking"
   },
   "booking": {
     "id": "uuid-here",
     "restaurant_id": "restaurant-uuid",
-    "restaurant_name": "Amici Coffee",
+    "restaurant_name": "Your Restaurant Name",
     "date": "2024-01-15",
     "time": "19:00",
     "party_size": 4,
@@ -120,7 +120,7 @@ curl -X POST http://localhost:54321/functions/v1/send-customer-to-crm \
 
 ### 2. Test from Your Application
 
-1. Make a test booking in your TablePilotPro application
+1. Make a test booking in your TP Core application
 2. Check the browser console for CRM integration logs
 3. Verify the data appears in your CRM application
 

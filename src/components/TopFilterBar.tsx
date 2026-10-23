@@ -1,5 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Calendar, Clock, Users, Search } from 'lucide-react';
+import {
+  customerBookingSlots,
+  formatNextBooking,
+  getBookingNoticeMinutes,
+  nextBookableSlot,
+} from '@/lib/bookingNotice';
+import { isDayClosed, useOpeningHours } from '@/lib/openingHours';
 
 interface TopFilterBarProps {
   selectedDate: string;
@@ -30,31 +37,23 @@ const getDaysInMonth = (year: number, month: number) => {
   const days: string[] = [];
   const lastDay = new Date(year, month, 0).getDate();
   const now = new Date();
-  const todayYear = now.getFullYear();
-  const todayMonth = now.getMonth() + 1;
-  const todayDate = now.getDate();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
   for (let day = 1; day <= lastDay; day++) {
-    if (
-      (year === todayYear && month === todayMonth && day >= todayDate) ||
-      (year !== todayYear || month !== todayMonth)
-    ) {
-      // Use local time for formatting
-      const yyyy = year.toString().padStart(4, '0');
-      const mm = month.toString().padStart(2, '0');
-      const dd = day.toString().padStart(2, '0');
-      days.push(`${yyyy}-${mm}-${dd}`);
-    }
+    const date = new Date(year, month - 1, day);
+    if (date < todayStart || isDayClosed(date)) continue;
+    const yyyy = year.toString().padStart(4, '0');
+    const mm = month.toString().padStart(2, '0');
+    const dd = day.toString().padStart(2, '0');
+    days.push(`${yyyy}-${mm}-${dd}`);
   }
   return days;
 };
 
-const timeSlots = [
-  '11:00', '11:30', '12:00', '12:30', '13:00', '13:30',
-  '14:00', '14:30', '15:00', '15:30', '16:00', '16:30',
-  '17:00', '17:30', '18:00', '18:30', '19:00', '19:30',
-  '20:00', '20:30', '21:00', '21:30', '22:00'
-];
+const parseLocalDate = (value: string) => {
+  const [year, month, day] = value.split('-').map(Number);
+  return new Date(year, month - 1, day);
+};
 
 const partySizes = Array.from({ length: 8 }, (_, i) => (i + 1).toString());
 
@@ -85,6 +84,9 @@ const TopFilterBar: React.FC<TopFilterBarProps> = ({
   const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   const [availableDays, setAvailableDays] = useState<string[]>([]);
+  const openingHours = useOpeningHours();
+  const [notice, setNotice] = useState(getBookingNoticeMinutes());
+  const [nextBooking, setNextBooking] = useState('…');
 
   // Generate years (current year + next 2 years)
   const years = Array.from({ length: 3 }, (_, i) => new Date().getFullYear() + i);
@@ -97,7 +99,32 @@ const TopFilterBar: React.FC<TopFilterBarProps> = ({
     if (selectedDate && !days.includes(selectedDate)) {
       onDateChange('');
     }
-  }, [selectedMonth, selectedYear, selectedDate, onDateChange]);
+  }, [selectedMonth, selectedYear, selectedDate, onDateChange, openingHours]);
+
+  useEffect(() => {
+    const refresh = () => {
+      setNotice(getBookingNoticeMinutes());
+      setNextBooking(formatNextBooking(nextBookableSlot()));
+    };
+    refresh();
+    const timer = window.setInterval(refresh, 30_000);
+    window.addEventListener('booking-notice-updated', refresh);
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener('booking-notice-updated', refresh);
+    };
+  }, [openingHours]);
+
+  const timeSlots = useMemo(() => {
+    if (!selectedDate) return customerBookingSlots(new Date());
+    return customerBookingSlots(parseLocalDate(selectedDate));
+  }, [selectedDate, notice, openingHours]);
+
+  useEffect(() => {
+    if (selectedTime && !timeSlots.includes(selectedTime)) {
+      onTimeChange('');
+    }
+  }, [selectedTime, timeSlots, onTimeChange]);
 
   return (
     <div className="w-full bg-gradient-to-r from-amber-50 to-orange-50 shadow-lg py-4 px-6 sticky top-0 z-40 border-b border-amber-200 mt-20">
@@ -170,6 +197,10 @@ const TopFilterBar: React.FC<TopFilterBarProps> = ({
               </div>
             </div>
           </div>
+
+          <span className="whitespace-nowrap text-sm font-medium text-gray-700">
+            Next {nextBooking}
+          </span>
 
           {/* Time Filter */}
           <div className="relative group">

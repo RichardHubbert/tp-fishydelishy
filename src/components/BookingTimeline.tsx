@@ -1,11 +1,27 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { addDays, format, isSameDay } from 'date-fns';
+import {
+  addDays,
+  addMonths,
+  addWeeks,
+  eachDayOfInterval,
+  endOfMonth,
+  endOfWeek,
+  format,
+  isBefore,
+  isSameDay,
+  isSameMonth,
+  isToday,
+  startOfDay,
+  startOfMonth,
+  startOfWeek,
+} from 'date-fns';
 import {
   Bell,
   Check,
   ChevronLeft,
   ChevronRight,
   Clock,
+  Copy,
   Inbox,
   LayoutGrid,
   List,
@@ -14,6 +30,7 @@ import {
   Plus,
   Search,
   Sparkles,
+  Trash2,
   Users,
   Workflow,
 } from 'lucide-react';
@@ -41,6 +58,32 @@ const VIEWS = [
 ] as const;
 
 type ViewId = (typeof VIEWS)[number]['id'];
+type RangeId = 'day' | 'week' | 'month';
+
+const WEEK_START = { weekStartsOn: 1 as const };
+
+const parseBookingDay = (value: string) => {
+  const [year, month, day] = value.slice(0, 10).split('-').map(Number);
+  return new Date(year, (month || 1) - 1, day || 1);
+};
+
+const stepDate = (date: Date, range: RangeId, direction: -1 | 1) => {
+  if (range === 'week') return addWeeks(date, direction);
+  if (range === 'month') return addMonths(date, direction);
+  return addDays(date, direction);
+};
+
+const rangeLabel = (date: Date, range: RangeId) => {
+  if (range === 'month') return format(date, 'MMMM yyyy');
+  if (range === 'week') {
+    const start = startOfWeek(date, WEEK_START);
+    const end = endOfWeek(date, WEEK_START);
+    return start.getMonth() === end.getMonth()
+      ? `${format(start, 'd')}–${format(end, 'd MMM yyyy')}`
+      : `${format(start, 'd MMM')} – ${format(end, 'd MMM yyyy')}`;
+  }
+  return format(date, 'EEEE, MMMM d');
+};
 
 interface BookingTimelineProps {
   date: Date;
@@ -53,19 +96,31 @@ interface BookingTimelineProps {
   onRestaurantChange: (restaurantId: string) => void;
   onNewBooking: () => void;
   onMoveBooking: (booking: Booking, update: { tableId: string; startTime: string; endTime: string }) => Promise<void>;
-  onSaveBooking: (booking: Booking, update: {
-    customer_name: string;
-    customer_email: string;
-    customer_phone?: string;
-    party_size: number;
-    start_time: string;
-    end_time: string;
-    table_id: string;
-    status: Booking['status'];
-    special_requests?: string;
-  }) => Promise<void>;
+  onSaveBooking: (booking: Booking, update: BookingDraft) => Promise<void>;
+  onDuplicateBooking: (booking: Booking, update: BookingDraft) => Promise<{ id: string; date: string }>;
+  onDeleteBooking: (booking: Booking) => Promise<void>;
   onAcceptRequest: (request: BookingRequest, slot: { time: string; tableId: string }) => Promise<void>;
 }
+
+type BookingDraft = {
+  customer_name: string;
+  customer_email: string;
+  customer_phone?: string;
+  party_size: number;
+  start_time: string;
+  end_time: string;
+  table_id: string;
+  status: Booking['status'];
+  special_requests?: string;
+};
+
+const actionError = (error: unknown, fallback: string) => {
+  if (error instanceof Error && error.message) return error.message;
+  if (error && typeof error === 'object' && 'message' in error && typeof (error as { message: unknown }).message === 'string') {
+    return (error as { message: string }).message;
+  }
+  return fallback;
+};
 
 const toMinutes = (time: string) => {
   const [hours, minutes] = time.split(':').map(Number);
@@ -135,23 +190,17 @@ function ReservationEditor({
   onClose,
   onViewTimeline,
   onSave,
+  onDuplicate,
+  onDelete,
 }: {
   booking: Booking;
   tables: DiningTable[];
   saving: boolean;
   onClose: () => void;
   onViewTimeline: () => void;
-  onSave: (update: {
-    customer_name: string;
-    customer_email: string;
-    customer_phone?: string;
-    party_size: number;
-    start_time: string;
-    end_time: string;
-    table_id: string;
-    status: Booking['status'];
-    special_requests?: string;
-  }) => void;
+  onSave: (update: BookingDraft) => void;
+  onDuplicate: (update: BookingDraft) => void;
+  onDelete: () => void;
 }) {
   const [name, setName] = useState(booking.customer_name);
   const [phone, setPhone] = useState(booking.customer_phone || '');
@@ -162,6 +211,7 @@ function ReservationEditor({
   const [tableId, setTableId] = useState(booking.table_id);
   const [status, setStatus] = useState<Booking['status']>(booking.status);
   const [notes, setNotes] = useState(booking.special_requests || '');
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   useEffect(() => {
     setName(booking.customer_name);
@@ -173,7 +223,23 @@ function ReservationEditor({
     setTableId(booking.table_id);
     setStatus(booking.status);
     setNotes(booking.special_requests || '');
+    setConfirmDelete(false);
   }, [booking]);
+
+  const draft = (): BookingDraft => {
+    const startMinutes = toMinutes(start);
+    return {
+      customer_name: name.trim(),
+      customer_email: email.trim(),
+      customer_phone: phone.trim(),
+      party_size: partySize,
+      start_time: minutesToClock(startMinutes),
+      end_time: minutesToClock(startMinutes + duration),
+      table_id: tableId,
+      status,
+      special_requests: notes.trim(),
+    };
+  };
 
   return (
     <aside className="flex w-full shrink-0 flex-col border-t border-gray-200 bg-white lg:w-80 lg:border-l lg:border-t-0">
@@ -266,31 +332,178 @@ function ReservationEditor({
           <textarea value={notes} onChange={(event) => setNotes(event.target.value)} rows={3} className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900" />
         </label>
       </div>
-      <div className="mt-auto flex items-center justify-end gap-2 border-t border-gray-100 p-3">
-        <button type="button" onClick={onClose} className="rounded-full px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50">Close</button>
-        <button
-          type="button"
-          disabled={saving || !name.trim() || !email.trim()}
-          onClick={() => {
-            const startMinutes = toMinutes(start);
-            onSave({
-              customer_name: name.trim(),
-              customer_email: email.trim(),
-              customer_phone: phone.trim(),
-              party_size: partySize,
-              start_time: minutesToClock(startMinutes),
-              end_time: minutesToClock(startMinutes + duration),
-              table_id: tableId,
-              status,
-              special_requests: notes.trim(),
-            });
-          }}
-          className="rounded-full bg-neutral-900 px-4 py-1.5 text-sm font-medium text-white disabled:opacity-50"
-        >
-          {saving ? 'Saving...' : 'Save'}
-        </button>
+      <div className="mt-auto space-y-2 border-t border-gray-100 p-3">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            disabled={saving || !name.trim() || !email.trim()}
+            onClick={() => onDuplicate(draft())}
+            className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+          >
+            <Copy className="h-3.5 w-3.5" />
+            Duplicate
+          </button>
+          {confirmDelete ? (
+            <button
+              type="button"
+              disabled={saving}
+              onClick={onDelete}
+              className="inline-flex items-center gap-1.5 rounded-full bg-red-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              {saving ? 'Deleting...' : 'Confirm delete'}
+            </button>
+          ) : (
+            <button
+              type="button"
+              disabled={saving}
+              onClick={() => setConfirmDelete(true)}
+              className="inline-flex items-center gap-1.5 rounded-full border border-red-200 px-3 py-1.5 text-sm text-red-700 hover:bg-red-50 disabled:opacity-50"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              Delete
+            </button>
+          )}
+        </div>
+        <div className="flex items-center justify-end gap-2">
+          <button type="button" onClick={onClose} className="rounded-full px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50">Close</button>
+          <button
+            type="button"
+            disabled={saving || !name.trim() || !email.trim()}
+            onClick={() => onSave(draft())}
+            className="rounded-full bg-neutral-900 px-4 py-1.5 text-sm font-medium text-white disabled:opacity-50"
+          >
+            {saving ? 'Saving...' : 'Save'}
+          </button>
+        </div>
       </div>
     </aside>
+  );
+}
+
+function RangeCalendar({
+  range,
+  date,
+  bookings,
+  tables,
+  selectedId,
+  onSelectBooking,
+  onOpenDay,
+}: {
+  range: 'week' | 'month';
+  date: Date;
+  bookings: Booking[];
+  tables: DiningTable[];
+  selectedId: string | null;
+  onSelectBooking: (id: string) => void;
+  onOpenDay: (day: Date) => void;
+}) {
+  const days = range === 'week'
+    ? eachDayOfInterval({
+        start: startOfWeek(date, WEEK_START),
+        end: endOfWeek(date, WEEK_START),
+      })
+    : eachDayOfInterval({
+        start: startOfWeek(startOfMonth(date), WEEK_START),
+        end: endOfWeek(endOfMonth(date), WEEK_START),
+      });
+
+  const tableName = (id: string) => tables.find((table) => table.id === id)?.name;
+  const pastDay = (day: Date) => isBefore(startOfDay(day), startOfDay(new Date()));
+  const onDay = (day: Date) =>
+    bookings
+      .filter((booking) => isSameDay(parseBookingDay(booking.booking_date), day))
+      .sort((a, b) => a.start_time.localeCompare(b.start_time));
+
+  if (range === 'week') {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-7">
+        {days.map((day) => {
+          const items = onDay(day);
+          return (
+            <div key={day.toISOString()} className={cn('min-h-48 border-b border-r border-gray-100 p-2', pastDay(day) && 'bg-gray-100 opacity-40')}>
+              <button type="button" onClick={() => onOpenDay(day)} className="mb-2 flex items-center gap-2">
+                <span className="text-xs font-medium uppercase text-gray-400">{format(day, 'EEE')}</span>
+                <span className={cn('inline-flex h-7 w-7 items-center justify-center rounded-full text-sm font-semibold', isToday(day) ? 'bg-neutral-900 text-white' : 'text-gray-900')}>
+                  {format(day, 'd')}
+                </span>
+              </button>
+              <div className="space-y-1">
+                {items.length === 0 && <p className="text-xs text-gray-400">No bookings</p>}
+                {items.map((booking) => (
+                  <button
+                    key={booking.id}
+                    type="button"
+                    onClick={() => onSelectBooking(booking.id)}
+                    className={cn(
+                      'block w-full rounded-md border px-2 py-1 text-left text-xs',
+                      selectedId === booking.id ? 'border-neutral-900 bg-neutral-900 text-white' : 'border-blue-200 bg-blue-50 text-blue-950 hover:bg-blue-100'
+                    )}
+                  >
+                    <span className="font-medium">{formatClock(booking.start_time)}</span>
+                    <span className="mt-0.5 block truncate">{booking.customer_name}</span>
+                    <span className={cn('block truncate', selectedId === booking.id ? 'text-white/70' : 'text-blue-800/70')}>
+                      {booking.party_size} · {tableName(booking.table_id) || 'No table'}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div className="grid grid-cols-7 border-b border-gray-100 px-2 py-2 text-center text-[11px] font-medium uppercase text-gray-400">
+        {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((label) => (
+          <span key={label}>{label}</span>
+        ))}
+      </div>
+      <div className="grid grid-cols-7">
+        {days.map((day) => {
+          const items = onDay(day);
+          const inMonth = isSameMonth(day, date);
+          const shown = items.slice(0, 3);
+          return (
+            <div key={day.toISOString()} className={cn('min-h-28 border-b border-r border-gray-100 p-1.5', pastDay(day) ? 'bg-gray-100 opacity-40' : !inMonth && 'bg-gray-50')}>
+              <button
+                type="button"
+                onClick={() => onOpenDay(day)}
+                className={cn(
+                  'mb-1 inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold',
+                  isToday(day) ? 'bg-neutral-900 text-white' : inMonth ? 'text-gray-900' : 'text-gray-400'
+                )}
+              >
+                {format(day, 'd')}
+              </button>
+              <div className="space-y-0.5">
+                {shown.map((booking) => (
+                  <button
+                    key={booking.id}
+                    type="button"
+                    onClick={() => onSelectBooking(booking.id)}
+                    className={cn(
+                      'block w-full truncate rounded px-1 py-0.5 text-left text-[11px]',
+                      selectedId === booking.id ? 'bg-neutral-900 text-white' : 'bg-blue-50 text-blue-950 hover:bg-blue-100'
+                    )}
+                  >
+                    {formatClock(booking.start_time)} {booking.customer_name}
+                  </button>
+                ))}
+                {items.length > shown.length && (
+                  <button type="button" onClick={() => onOpenDay(day)} className="px-1 text-[11px] text-gray-500 hover:text-gray-800">
+                    +{items.length - shown.length} more
+                  </button>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
@@ -300,15 +513,16 @@ const BookingTimeline = ({
   tables,
   bookings,
   schedule,
-  restaurants,
   selectedRestaurantId,
-  onRestaurantChange,
   onNewBooking,
   onMoveBooking,
   onSaveBooking,
+  onDuplicateBooking,
+  onDeleteBooking,
   onAcceptRequest,
 }: BookingTimelineProps) => {
   const [view, setView] = useState<ViewId>('timeline');
+  const [range, setRange] = useState<RangeId>('day');
   const [zoomIndex, setZoomIndex] = useState(1);
   const [query, setQuery] = useState('');
   const [requests, setRequests] = useState<BookingRequest[]>(() => loadBookingRequests());
@@ -344,6 +558,7 @@ const BookingTimeline = ({
     party: number;
   } | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
+  const timelineScrollRef = useRef<HTMLDivElement>(null);
   const requestBadge = requests.filter((request) => request.status === 'open' && !isRequestExpired(request) && (!selectedRestaurantId || !request.restaurant_id || request.restaurant_id === selectedRestaurantId)).length;
 
   useEffect(() => {
@@ -502,6 +717,21 @@ const BookingTimeline = ({
     );
   }, [bookings, query]);
 
+  const calendarBookings = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    return schedule.filter((booking) => {
+      if (booking.status === 'cancelled') return false;
+      if (selectedRestaurantId && booking.restaurant_id !== selectedRestaurantId) return false;
+      if (!needle) return true;
+      return (
+        booking.customer_name.toLowerCase().includes(needle) ||
+        booking.customer_email?.toLowerCase().includes(needle) ||
+        booking.customer_phone?.toLowerCase().includes(needle) ||
+        booking.special_requests?.toLowerCase().includes(needle)
+      );
+    });
+  }, [schedule, selectedRestaurantId, query]);
+
   const listBookings = useMemo(() => {
     return filteredBookings.filter((booking) => {
       const placed = placedBooking(booking);
@@ -513,7 +743,7 @@ const BookingTimeline = ({
     });
   }, [filteredBookings, listFilter, moves]);
 
-  const selectedSource = bookings.find((booking) => booking.id === selectedId) || null;
+  const selectedSource = schedule.find((booking) => booking.id === selectedId) || bookings.find((booking) => booking.id === selectedId) || null;
   const selectedBooking = selectedSource ? placedBooking(selectedSource) : null;
 
   const rows = useMemo(() => {
@@ -549,6 +779,16 @@ const BookingTimeline = ({
   const nowOffset = ((nowMinutes - dayStart) / daySpan) * gridWidth;
   const nowVisible = showNow && nowOffset >= 0 && nowOffset <= gridWidth;
 
+  useEffect(() => {
+    if (view !== 'timeline' || range !== 'day') return;
+    const node = timelineScrollRef.current;
+    if (!node || !isSameDay(date, new Date())) return;
+    const minutes = new Date().getHours() * 60 + new Date().getMinutes();
+    const offset = ((minutes - dayStart) / daySpan) * gridWidth;
+    if (offset < 0 || offset > gridWidth) return;
+    node.scrollLeft = Math.max(0, LABEL_WIDTH + offset - node.clientWidth * 0.3);
+  }, [view, range, date, zoomIndex, gridWidth, dayStart, daySpan]);
+
   const positionFor = (time: string) => ((toMinutes(time) - dayStart) / daySpan) * gridWidth;
 
   return (
@@ -557,23 +797,39 @@ const BookingTimeline = ({
         <div className="flex items-center gap-1">
           <button
             type="button"
-            aria-label="Previous day"
-            onClick={() => onDateChange(addDays(date, -1))}
+            aria-label={range === 'day' ? 'Previous day' : range === 'week' ? 'Previous week' : 'Previous month'}
+            onClick={() => onDateChange(stepDate(date, range, -1))}
             className="rounded-md p-1.5 text-gray-500 hover:bg-gray-100"
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
           <span className="min-w-[10.5rem] text-center text-sm font-semibold text-gray-900">
-            {format(date, 'EEEE, MMMM d')}
+            {rangeLabel(date, range)}
           </span>
           <button
             type="button"
-            aria-label="Next day"
-            onClick={() => onDateChange(addDays(date, 1))}
+            aria-label={range === 'day' ? 'Next day' : range === 'week' ? 'Next week' : 'Next month'}
+            onClick={() => onDateChange(stepDate(date, range, 1))}
             className="rounded-md p-1.5 text-gray-500 hover:bg-gray-100"
           >
             <ChevronRight className="h-4 w-4" />
           </button>
+        </div>
+
+        <div className="flex rounded-lg border border-gray-200 p-0.5">
+          {(['day', 'week', 'month'] as const).map((id) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => setRange(id)}
+              className={cn(
+                'rounded-md px-2.5 py-1 text-xs font-medium capitalize',
+                range === id ? 'bg-neutral-900 text-white' : 'text-gray-600 hover:bg-gray-50'
+              )}
+            >
+              {id}
+            </button>
+          ))}
         </div>
 
         <button
@@ -586,19 +842,6 @@ const BookingTimeline = ({
         </button>
 
         <div className="ml-auto flex flex-wrap items-center gap-2">
-          <select
-            aria-label="Restaurant"
-            value={selectedRestaurantId}
-            onChange={(event) => onRestaurantChange(event.target.value)}
-            className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-800"
-          >
-            <option value="">All restaurants</option>
-            {restaurants.map((restaurant) => (
-              <option key={restaurant.id} value={restaurant.id}>
-                {restaurant.name}
-              </option>
-            ))}
-          </select>
           <label className="flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-500">
             <Search className="h-4 w-4" />
             <input
@@ -613,7 +856,7 @@ const BookingTimeline = ({
         </div>
       </div>
 
-      <div className="flex gap-1 overflow-x-auto border-b border-gray-100 px-3">
+      {range === 'day' && <div className="flex gap-1 overflow-x-auto border-b border-gray-100 px-3">
         {VIEWS.map((item) => {
           const Icon = item.icon;
           const active = view === item.id;
@@ -639,7 +882,7 @@ const BookingTimeline = ({
             </button>
           );
         })}
-      </div>
+      </div>}
 
       {moveError && (
         <p className="border-b border-red-100 bg-red-50 px-4 py-2 text-sm text-red-700">{moveError}</p>
@@ -647,7 +890,20 @@ const BookingTimeline = ({
 
       <div className="flex flex-col lg:flex-row">
       <div className="min-w-0 flex-1">
-      {view === 'requests' ? (
+      {range !== 'day' ? (
+        <RangeCalendar
+          range={range}
+          date={date}
+          bookings={calendarBookings}
+          tables={tables}
+          selectedId={selectedId}
+          onSelectBooking={setSelectedId}
+          onOpenDay={(day) => {
+            onDateChange(day);
+            setRange('day');
+          }}
+        />
+      ) : view === 'requests' ? (
         <BookingRequests
           requests={requests}
           onChange={setRequests}
@@ -758,7 +1014,7 @@ const BookingTimeline = ({
           {VIEWS.find((item) => item.id === view)?.label} is not part of core yet. Timeline is the working view.
         </p>
       ) : (
-        <div className="overflow-x-auto">
+        <div ref={timelineScrollRef} className="overflow-x-auto">
           <div style={{ width: LABEL_WIDTH + gridWidth }} className="relative">
             <div className="sticky top-0 z-20 flex border-b border-gray-100 bg-white">
               <div className="sticky left-0 z-30 flex items-center gap-1 border-r border-gray-100 bg-white px-3" style={{ width: LABEL_WIDTH }}>
@@ -908,7 +1164,35 @@ const BookingTimeline = ({
             try {
               await onSaveBooking(selectedSource, update);
             } catch (error) {
-              setMoveError(error instanceof Error ? error.message : 'Could not save that booking.');
+              setMoveError(actionError(error, 'Could not save that booking.'));
+            } finally {
+              setSaving(false);
+            }
+          }}
+          onDuplicate={async (update) => {
+            if (!selectedSource) return;
+            setSaving(true);
+            setMoveError(null);
+            try {
+              const created = await onDuplicateBooking(selectedSource, update);
+              const [year, month, day] = created.date.split('-').map(Number);
+              onDateChange(new Date(year, month - 1, day));
+              setSelectedId(created.id);
+            } catch (error) {
+              setMoveError(actionError(error, 'Could not duplicate that booking.'));
+            } finally {
+              setSaving(false);
+            }
+          }}
+          onDelete={async () => {
+            if (!selectedSource) return;
+            setSaving(true);
+            setMoveError(null);
+            try {
+              await onDeleteBooking(selectedSource);
+              setSelectedId(null);
+            } catch (error) {
+              setMoveError(actionError(error, 'Could not delete that booking.'));
             } finally {
               setSaving(false);
             }

@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { siteRestaurantId } from '@/config/restaurant';
 import { TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
 
 export type Restaurant = TablesInsert<'restaurants'> & { id: string; county?: string | null; is_default?: boolean; category_id?: string | null };
@@ -114,12 +115,19 @@ export const setDefaultRestaurant = async (id: string): Promise<void> => {
 
 // Fetch all active restaurants
 export const fetchRestaurants = async (): Promise<Restaurant[]> => {
-  const { data, error } = await supabase
+  let query = supabase
     .from('restaurants')
     .select('*')
     .eq('is_active', true)
     .order('is_default', { ascending: false })
     .order('name', { ascending: true });
+
+  if (!siteRestaurantId) {
+    return [];
+  }
+  query = query.eq('id', siteRestaurantId);
+
+  const { data, error } = await query;
 
   if (error) {
     console.error('Error fetching restaurants:', error);
@@ -131,11 +139,18 @@ export const fetchRestaurants = async (): Promise<Restaurant[]> => {
 
 // Fetch all restaurants (including inactive) - for admin
 export const fetchAllRestaurants = async (): Promise<Restaurant[]> => {
-  const { data, error } = await supabase
+  let query = supabase
     .from('restaurants')
     .select('*')
     .order('is_default', { ascending: false })
     .order('name', { ascending: true });
+
+  if (!siteRestaurantId) {
+    return [];
+  }
+  query = query.eq('id', siteRestaurantId);
+
+  const { data, error } = await query;
 
   if (error) {
     console.error('Error fetching all restaurants:', error);

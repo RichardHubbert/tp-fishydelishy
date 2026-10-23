@@ -1,19 +1,37 @@
 import { supabase } from '@/integrations/supabase/client';
 import { format, addMinutes, isSameDay } from 'date-fns';
-import { sendCustomerToCRM } from './crmService';
 import { siteConfig } from '@/config/site';
+import { requireRestaurantId, siteRestaurantId } from '@/config/restaurant';
+import { bookingSlots, isAdvanceBookable, noticeLeadLabel } from '@/lib/bookingNotice';
+import { isDayClosed } from '@/lib/openingHours';
+import { sendCustomerToCRM } from './crmService';
+
+export { siteRestaurantId };
+
+const extraIds = (siteConfig as { ids?: { businessId?: string } }).ids;
+const siteBusinessId = siteConfig.business.businessId || extraIds?.businessId || '';
+
+const resolveBookingOwner = () => {
+  const restaurantId = requireRestaurantId();
+  return {
+    restaurantId,
+    businessId: siteBusinessId || restaurantId,
+  };
+};
 
 export interface Table {
   id: string;
   name: string;
   capacity: number;
   section: string;
+  restaurant_id?: string | null;
 }
 
 export interface TableInput {
   name: string;
   capacity: number;
   section: string;
+  restaurantId?: string | null;
 }
 
 export interface Booking {
@@ -41,12 +59,16 @@ export interface Booking {
 }
 
 // Fetch all tables from Supabase
-export const fetchTables = async (): Promise<Table[]> => {
+export const fetchTables = async (restaurantId?: string): Promise<Table[]> => {
   console.log('Fetching tables from Supabase...');
-  const { data, error } = await supabase
+  const scopedRestaurantId = requireRestaurantId();
+  let query = supabase
     .from('tables')
     .select('*')
+    .eq('restaurant_id', scopedRestaurantId)
     .order('name');
+
+  const { data, error } = await query;
   
   if (error) {
     console.error('Error fetching tables:', error);
@@ -58,16 +80,19 @@ export const fetchTables = async (): Promise<Table[]> => {
 };
 
 // Fetch bookings for a specific date
-export const fetchBookingsForDate = async (date: Date): Promise<Booking[]> => {
+export const fetchBookingsForDate = async (date: Date, restaurantId?: string): Promise<Booking[]> => {
   const dateString = format(date, 'yyyy-MM-dd');
   console.log('Fetching bookings for date:', dateString);
   
-  const { data, error } = await supabase
+  let query = supabase
     .from('bookings')
     .select('*')
     .eq('booking_date', dateString)
-    .eq('status', 'confirmed')
-    .eq('restaurant_id', siteConfig.ids.restaurantId);
+    .eq('status', 'confirmed');
+
+  query = query.eq('restaurant_id', requireRestaurantId());
+
+  const { data, error } = await query;
   
   if (error) {
     console.error('Error fetching bookings:', error);
@@ -82,23 +107,7 @@ export const fetchBookingsForDate = async (date: Date): Promise<Booking[]> => {
   }));
 };
 
-// Generate time slots from 11:00 AM to 7:30 PM (every 30 minutes)
-export const generateTimeSlots = (): string[] => {
-  const slots: string[] = [];
-  const startHour = 11; // 11 AM
-  const endHour = 19; // 7 PM
-  const endMinute = 30; // 7:30 PM
-
-  for (let hour = startHour; hour <= endHour; hour++) {
-    for (let minute = 0; minute < 60; minute += 30) {
-      if (hour === endHour && minute > endMinute) break;
-      
-      const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-      slots.push(timeString);
-    }
-  }
-  return slots;
-};
+export const generateTimeSlots = (): string[] => bookingSlots();
 
 // Check if a time slot overlaps with existing bookings
 const hasTimeConflict = (
@@ -126,11 +135,12 @@ const hasTimeConflict = (
 // Get available time slots for a specific date and party size
 export const getAvailableTimeSlots = async (
   date: Date,
-  partySize: number
+  partySize: number,
+  restaurantId?: string
 ): Promise<{time: string, available: boolean, tableSize?: number}[]> => {
-  const timeSlots = generateTimeSlots();
-  const tables = await fetchTables();
-  const bookings = await fetchBookingsForDate(date);
+  const timeSlots = bookingSlots(date).filter((timeSlot) => isAdvanceBookable(date, timeSlot));
+  const tables = await fetchTables(restaurantId);
+  const bookings = await fetchBookingsForDate(date, restaurantId);
   
   const suitableTables = tables.filter(table => table.capacity >= partySize);
   
@@ -162,9 +172,49 @@ export const getAvailableTimeSlots = async (
   });
 };
 
+export const countBookingsCreatedToday = async (restaurantId?: string): Promise<number> => {
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+
+  let query = supabase
+    .from('bookings')
+    .select('id', { count: 'exact', head: true })
+    .gte('created_at', start.toISOString())
+    .neq('status', 'cancelled');
+
+  query = query.eq('restaurant_id', requireRestaurantId());
+
+  const { count, error } = await query;
+  if (error) {
+    console.error('Error counting today\'s bookings:', error);
+    return 0;
+  }
+  return count || 0;
+};
+
+export const requestBookingAlert = async (alert: {
+  restaurantId: string;
+  email: string;
+  partySize: number;
+  date: string;
+  time: string;
+}): Promise<void> => {
+  const { error } = await supabase.from('booking_alerts').insert({
+    restaurant_id: requireRestaurantId(),
+    email: alert.email.trim(),
+    party_size: alert.partySize,
+    requested_date: alert.date,
+    requested_time: alert.time,
+  });
+
+  if (error) {
+    throw error;
+  }
+};
+
 // Get the optimal table for a party size (prefer exact match)
-export const getOptimalTable = async (partySize: number): Promise<Table | null> => {
-  const tables = await fetchTables();
+export const getOptimalTable = async (partySize: number, restaurantId?: string): Promise<Table | null> => {
+  const tables = await fetchTables(restaurantId);
   const suitableTables = tables.filter(table => table.capacity >= partySize);
   
   if (suitableTables.length === 0) return null;
@@ -193,6 +243,16 @@ export const createBooking = async (bookingData: {
   });
   
   try {
+    if (isDayClosed(bookingData.date)) {
+      throw new Error('This restaurant is closed on that day.');
+    }
+    if (!bookingSlots(bookingData.date).includes(bookingData.startTime.slice(0, 5))) {
+      throw new Error('That time is outside booking hours.');
+    }
+    if (!isAdvanceBookable(bookingData.date, bookingData.startTime)) {
+      throw new Error(`Bookings need to be at least ${noticeLeadLabel()} from now.`);
+    }
+
     // Test Supabase connection first
     console.log('🔌 Testing Supabase connection...');
     const connectionTest = await supabase.from('tables').select('count', { count: 'exact', head: true });
@@ -203,8 +263,10 @@ export const createBooking = async (bookingData: {
       throw new Error(`Database connection failed: ${connectionTest.error.message}`);
     }
     
+    const owner = resolveBookingOwner();
+
     console.log('🔍 Finding optimal table...');
-    const optimalTable = await getOptimalTable(bookingData.partySize);
+    const optimalTable = await getOptimalTable(bookingData.partySize, owner.restaurantId);
     
     if (!optimalTable) {
       console.error('❌ No suitable table found for party size:', bookingData.partySize);
@@ -223,8 +285,8 @@ export const createBooking = async (bookingData: {
       .from('bookings')
       .insert({
         table_id: optimalTable.id,
-        restaurant_id: siteConfig.ids.restaurantId,
-        business_id: siteConfig.ids.businessId,
+        restaurant_id: owner.restaurantId,
+        business_id: owner.businessId,
         customer_name: bookingData.customerName,
         customer_email: bookingData.customerEmail,
         customer_phone: bookingData.customerPhone,
@@ -258,7 +320,7 @@ export const createBooking = async (bookingData: {
         customerEmail: bookingData.customerEmail,
         customerPhone: bookingData.customerPhone,
         specialRequests: bookingData.specialRequests,
-        restaurantId: bookingData.restaurantId,
+        restaurantId: owner.restaurantId,
         bookingDate: format(bookingData.date, 'yyyy-MM-dd'),
         startTime: bookingData.startTime,
         partySize: bookingData.partySize,
@@ -286,12 +348,14 @@ export const createBooking = async (bookingData: {
 // Fetch all bookings with restaurant info (for admin dashboard)
 export const fetchAllBookings = async (): Promise<Booking[]> => {
   console.log('Fetching all bookings from Supabase...');
-  const { data, error } = await supabase
+  let query = supabase
     .from('bookings')
     .select(`*, restaurant:restaurant_id (id, name, cuisine)`)
-    .eq('restaurant_id', siteConfig.ids.restaurantId)
     .order('booking_date', { ascending: true })
+    .eq('restaurant_id', requireRestaurantId())
     .order('start_time', { ascending: true });
+
+  const { data, error } = await query;
 
   if (error) {
     console.error('Error fetching all bookings:', error);
@@ -335,13 +399,44 @@ export const getNextReservationForTable = (tableId: string, allBookings: Booking
   return futureBookings.length > 0 ? futureBookings[0] : null;
 };
 
+// Delete a booking by ID
+export const deleteBooking = async (id: string): Promise<void> => {
+  const { error } = await supabase
+    .from('bookings')
+    .delete()
+    .eq('id', id)
+    .eq('restaurant_id', requireRestaurantId());
+  if (error) {
+    console.error('Error deleting booking:', error);
+    throw error;
+  }
+};
+
+// Update a booking by ID
+export const updateBooking = async (id: string, updates: Partial<Booking>): Promise<Booking> => {
+  const { data, error } = await supabase
+    .from('bookings')
+    .update(updates)
+    .eq('id', id)
+    .eq('restaurant_id', requireRestaurantId())
+    .select()
+    .single();
+  if (error) {
+    console.error('Error updating booking:', error);
+    throw error;
+  }
+  return data as Booking;
+};
+
 export const createTable = async (input: TableInput): Promise<Table> => {
+  const restaurantId = requireRestaurantId();
   const { data, error } = await supabase
     .from('tables')
     .insert({
       name: input.name.trim(),
       capacity: input.capacity,
       section: input.section.trim(),
+      restaurant_id: restaurantId,
     })
     .select()
     .single();
@@ -363,6 +458,7 @@ export const updateTable = async (id: string, input: TableInput): Promise<Table>
       section: input.section.trim(),
     })
     .eq('id', id)
+    .eq('restaurant_id', requireRestaurantId())
     .select()
     .single();
 
@@ -379,7 +475,7 @@ export const deleteTable = async (id: string): Promise<void> => {
     .from('bookings')
     .delete()
     .eq('table_id', id)
-    .eq('restaurant_id', siteConfig.ids.restaurantId);
+    .eq('restaurant_id', requireRestaurantId());
 
   if (bookingError) {
     console.error('Error deleting bookings for table:', bookingError);
@@ -389,39 +485,13 @@ export const deleteTable = async (id: string): Promise<void> => {
   const { error } = await supabase
     .from('tables')
     .delete()
-    .eq('id', id);
+    .eq('id', id)
+    .eq('restaurant_id', requireRestaurantId());
 
   if (error) {
     console.error('Error deleting table:', error);
     throw error;
   }
-};
-
-// Delete a booking by ID
-export const deleteBooking = async (id: string): Promise<void> => {
-  const { error } = await supabase
-    .from('bookings')
-    .delete()
-    .eq('id', id);
-  if (error) {
-    console.error('Error deleting booking:', error);
-    throw error;
-  }
-};
-
-// Update a booking by ID
-export const updateBooking = async (id: string, updates: Partial<Booking>): Promise<Booking> => {
-  const { data, error } = await supabase
-    .from('bookings')
-    .update(updates)
-    .eq('id', id)
-    .select()
-    .single();
-  if (error) {
-    console.error('Error updating booking:', error);
-    throw error;
-  }
-  return data as Booking;
 };
 
 export const placeBooking = async (booking: {
@@ -436,12 +506,13 @@ export const placeBooking = async (booking: {
   customerPhone?: string;
   specialRequests?: string;
 }): Promise<Booking> => {
+  const owner = resolveBookingOwner();
   const { data, error } = await supabase
     .from('bookings')
     .insert({
       table_id: booking.tableId,
-      restaurant_id: siteConfig.ids.restaurantId,
-      business_id: siteConfig.ids.businessId,
+      restaurant_id: owner.restaurantId,
+      business_id: owner.businessId,
       customer_name: booking.customerName,
       customer_email: booking.customerEmail,
       customer_phone: booking.customerPhone || null,

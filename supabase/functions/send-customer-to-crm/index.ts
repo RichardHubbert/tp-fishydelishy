@@ -441,7 +441,7 @@ serve(async (req: Request) => {
     console.log('DEBUG: Final crmBusinessId to be used:', crmBusinessId);
 
     // Determine if this is a new customer or a booking
-    const source = isNewCustomer ? 'tablepilotpro_new_customer' : 'tablepilotpro_booking';
+    const source = isNewCustomer ? 'tp_core_new_customer' : 'tp_core_booking';
 
     // Build CRM payload, always include business_id
     // Parse customer name into first and last name or use as full name depending on CRM schema

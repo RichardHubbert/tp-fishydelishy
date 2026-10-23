@@ -4,6 +4,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { format, addDays, isSameDay, startOfToday } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
+import { dayKeyFor, useOpeningHours } from '@/lib/openingHours';
 
 interface DateSelectorProps {
   selectedDate?: Date;
@@ -13,6 +14,7 @@ interface DateSelectorProps {
 const DateSelector: React.FC<DateSelectorProps> = ({ selectedDate, onDateSelect }) => {
   const today = startOfToday();
   const maxDate = addDays(today, 60); // Allow booking up to 60 days in advance
+  const openingHours = useOpeningHours();
   
   // Quick date selection buttons
   const quickDates = [
@@ -32,16 +34,20 @@ const DateSelector: React.FC<DateSelectorProps> = ({ selectedDate, onDateSelect 
       
       {/* Quick date selection */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
-        {quickDates.map((item) => (
+        {quickDates.map((item) => {
+          const closed = openingHours[dayKeyFor(item.date)].closed;
+          return (
           <Button
             key={item.label}
             variant={selectedDate && isSameDay(selectedDate, item.date) ? "default" : "outline"}
             className={`${selectedDate && isSameDay(selectedDate, item.date) ? 'bg-amber-600 hover:bg-amber-700' : 'hover:bg-amber-50'}`}
+            disabled={closed}
             onClick={() => onDateSelect(item.date)}
           >
             {item.label}
           </Button>
-        ))}
+          );
+        })}
       </div>
 
       {/* Calendar */}
@@ -50,7 +56,7 @@ const DateSelector: React.FC<DateSelectorProps> = ({ selectedDate, onDateSelect 
           mode="single"
           selected={selectedDate}
           onSelect={onDateSelect}
-          disabled={(date) => date < today || date > maxDate}
+          disabled={(date) => date < today || date > maxDate || openingHours[dayKeyFor(date)].closed}
           initialFocus
           className="rounded-md border shadow-md bg-white"
         />
@@ -76,8 +82,9 @@ const DateSelector: React.FC<DateSelectorProps> = ({ selectedDate, onDateSelect 
       )}
 
       <div className="text-sm text-gray-500 text-center space-y-1 mt-4 p-3 bg-gray-50 rounded-md">
-        <p>• Restaurant hours: 11:00 AM - 10:00 PM daily</p>
-        <p>• Last booking available at 7:30 PM</p>
+        <p>• Bookings cannot be in the past and need notice before the start time</p>
+        <p>• Closed days cannot be booked</p>
+        <p>• Last booking follows that day's hours</p>
         <p>• Each reservation is for 2.5 hours</p>
       </div>
     </div>

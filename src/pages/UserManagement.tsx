@@ -25,7 +25,7 @@ import UserMenu from '@/components/UserMenu';
 import NavigationHeader from '@/components/NavigationHeader';
 
 const UserManagement: React.FC = () => {
-  const { isAdmin, user } = useAdmin();
+  const { isAdmin, user, isLoading: adminLoading } = useAdmin();
   const { user: authUser, signOut } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -195,6 +195,14 @@ const UserManagement: React.FC = () => {
         return 'bg-gray-100 text-gray-800';
     }
   };
+
+  if (adminLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600"></div>
+      </div>
+    );
+  }
 
   if (!isAdmin) {
     return (

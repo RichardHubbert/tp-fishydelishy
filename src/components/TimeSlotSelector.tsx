@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Clock, AlertCircle } from 'lucide-react';
 import { format, addMinutes, parseISO } from 'date-fns';
 import { getAvailableTimeSlots } from '@/services/supabaseBookingService';
+import { getBookingNoticeMinutes, noticeLeadLabel } from '@/lib/bookingNotice';
+import { isDayClosed, useOpeningHours } from '@/lib/openingHours';
 
 interface TimeSlotSelectorProps {
   date: Date;
@@ -22,6 +24,15 @@ const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
   const [availableSlots, setAvailableSlots] = useState<{time: string, available: boolean, tableSize?: number}[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const openingHours = useOpeningHours();
+  const [notice, setNotice] = useState(getBookingNoticeMinutes());
+  const closed = isDayClosed(date);
+
+  useEffect(() => {
+    const refresh = () => setNotice(getBookingNoticeMinutes());
+    window.addEventListener('booking-notice-updated', refresh);
+    return () => window.removeEventListener('booking-notice-updated', refresh);
+  }, []);
 
   useEffect(() => {
     const loadAvailableSlots = async () => {
@@ -41,7 +52,7 @@ const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
     };
 
     loadAvailableSlots();
-  }, [date, partySize]);
+  }, [date, partySize, notice, openingHours]);
 
   const formatTimeSlot = (time: string) => {
     const [hours, minutes] = time.split(':');
@@ -91,7 +102,21 @@ const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
         </p>
       </div>
 
-      {availableSlotCount === 0 ? (
+      {availableSlots.length === 0 ? (
+        <Card className="bg-amber-50 border-amber-200">
+          <CardContent className="p-6 text-center">
+            <Clock className="h-12 w-12 text-amber-500 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-amber-800 mb-2">
+              {closed ? 'Closed that day' : 'No times left'}
+            </h3>
+            <p className="text-amber-700">
+              {closed
+                ? 'This restaurant does not take bookings on that day. Please choose another day.'
+                : `Bookings need to be at least ${noticeLeadLabel()} from now. Please choose a later day.`}
+            </p>
+          </CardContent>
+        </Card>
+      ) : availableSlotCount === 0 ? (
         <Card className="bg-red-50 border-red-200">
           <CardContent className="p-6 text-center">
             <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
@@ -160,6 +185,7 @@ const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
       )}
 
       <div className="text-sm text-gray-500 text-center space-y-1">
+        <p>• Bookings need at least {noticeLeadLabel()} notice and cannot be in the past</p>
         <p>• Each reservation is for 2.5 hours</p>
         <p>• Times shown are start times for your reservation</p>
         <p>• Green indicates available slots</p>

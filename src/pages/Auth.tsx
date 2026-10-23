@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { supabase, SUPABASE_URL } from '@/integrations/supabase/client';
+import { siteConfig } from '@/config/site';
 import type { User, Session } from '@supabase/supabase-js';
 
 type AuthView = 'login' | 'signup' | 'forgot' | 'reset';
@@ -226,8 +227,8 @@ const Auth = () => {
 
   // ── Render ─────────────────────────────────────────────────────────────────
   const cardMeta = {
-    login:  { title: 'Welcome Back',      desc: 'Sign in to your TablePilot account' },
-    signup: { title: 'Create Account',    desc: 'Join TablePilot to manage your bookings' },
+    login:  { title: 'Welcome Back',      desc: `Sign in to book at ${siteConfig.business.name}` },
+    signup: { title: 'Create Account',    desc: `Create an account for ${siteConfig.business.name}` },
     forgot: { title: 'Forgot Password',   desc: 'Enter your email and we\'ll send a reset link' },
     reset:  { title: 'Set New Password',  desc: 'Choose a new password for your account' },
   };

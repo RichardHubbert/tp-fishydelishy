@@ -1,5 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { Resend } from "npm:resend@6.34.1";
+import { createClient } from "jsr:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -13,6 +14,7 @@ type BookingEmail = {
   booking_date_time?: string;
   party_size?: number | string;
   special_requests?: string;
+  restaurant_id?: string;
   restaurant_name?: string;
   restaurant_address?: string;
   restaurant_phone?: string;
@@ -163,7 +165,7 @@ Deno.serve(async (req) => {
 
   const apiKey = Deno.env.get("RESEND_API_KEY");
   if (!apiKey) {
-    return new Response(JSON.stringify({ error: "Resend is not configured" }), {
+    return new Response(JSON.stringify({ error: "Email service not configured" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
@@ -179,16 +181,43 @@ Deno.serve(async (req) => {
       });
     }
 
-    const restaurantName = body.restaurant_name?.trim() || "Your Restaurant";  // Default fallback
+    // Fetch restaurant details from database if restaurant_id provided
+    let restaurantName = body.restaurant_name?.trim() || "";
+    let address = body.restaurant_address?.trim() || "";
+    let phone = body.restaurant_phone?.trim() || "";
+    let restaurantEmail = body.restaurant_email?.trim() || "";
+
+    if (body.restaurant_id) {
+      const supabaseUrl = Deno.env.get("SUPABASE_URL");
+      const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+      
+      if (supabaseUrl && supabaseKey) {
+        const supabase = createClient(supabaseUrl, supabaseKey);
+        const { data: restaurant } = await supabase
+          .from("restaurants")
+          .select("name, address, phone, email")
+          .eq("id", body.restaurant_id)
+          .single();
+
+        if (restaurant) {
+          restaurantName = restaurant.name || restaurantName;
+          address = restaurant.address || address;
+          phone = restaurant.phone || phone;
+          restaurantEmail = restaurant.email || restaurantEmail;
+        }
+      }
+    }
+
+    // Fallback if no restaurant name found
+    if (!restaurantName) {
+      restaurantName = "Your Restaurant";
+    }
+
     const guestName = body.to_name?.trim() || "there";
     const when = body.booking_date_time?.trim() || "the booked time";
     const partySize = body.party_size ?? "";
     const requests = body.special_requests?.trim() || "None";
-    const address = body.restaurant_address?.trim() || "";
-    const phone = body.restaurant_phone?.trim() || "";
-    const restaurantEmail = body.restaurant_email?.trim() || "";
     const bookingId = body.booking_id?.trim() || "";
-    const from = Deno.env.get("RESEND_FROM") || "Your Restaurant <onboarding@resend.dev>";  // Default fallback
 
     const message = buildBookingEmail({
       restaurantName,
@@ -204,7 +233,7 @@ Deno.serve(async (req) => {
 
     const resend = new Resend(apiKey);
     const { data, error } = await resend.emails.send({
-      from,
+      from: "Table Pilot <bookings@tablepilot.co.uk>",
       to: [to],
       subject: `Your table is reserved at ${restaurantName}`,
       html: message.html,
@@ -212,7 +241,8 @@ Deno.serve(async (req) => {
     });
 
     if (error) {
-      return new Response(JSON.stringify({ error: error.message }), {
+      console.error("Resend error:", error);
+      return new Response(JSON.stringify({ error: "Failed to send confirmation email" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -222,8 +252,8 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Failed to send email";
-    return new Response(JSON.stringify({ error: message }), {
+    console.error("Email function error:", error);
+    return new Response(JSON.stringify({ error: "Failed to send confirmation email" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

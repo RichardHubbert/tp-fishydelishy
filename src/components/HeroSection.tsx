@@ -11,11 +11,10 @@ interface HeroSectionProps {
 }
 
 const HeroSection: React.FC<HeroSectionProps> = ({ onBookTable, restaurantName = siteConfig.business.name, imageUrl }) => {
-  const { business, branding, features } = siteConfig;
-  const { primary, primaryShade, hover, background, backgroundShade, light } = branding.colors;
   const hasImage = Boolean(imageUrl);
+  const { primary, background, backgroundShade } = siteConfig.branding.colors;
   const bgGradient = `bg-gradient-to-br from-${primary}-50 to-${background}-${backgroundShade}`;
-  
+
   return (
     <section className={`relative overflow-hidden py-20 ${hasImage ? 'min-h-[32rem]' : bgGradient}`}>
       {hasImage && (
@@ -27,30 +26,30 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onBookTable, restaurantName =
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center">
           <h1 className={`text-4xl md:text-6xl font-bold mb-6 ${hasImage ? 'text-white' : 'text-gray-900'}`}>
-            {features.hero.welcome}{' '}
-            <span className={hasImage ? `text-${primary}-${light || primaryShade}` : `text-${primary}-${primaryShade}`}>{restaurantName}</span>
+            {siteConfig.features.hero.welcome}{' '}
+            <span className={hasImage ? `text-${primary}-${siteConfig.branding.colors.light}` : `text-${primary}-${siteConfig.branding.colors.primaryShade}`}>{restaurantName}</span>
           </h1>
           <p className={`text-xl mb-8 max-w-3xl mx-auto ${hasImage ? 'text-white/90' : 'text-gray-600'}`}>
-            {replaceTokens(features.hero.subtitle, { name: restaurantName })}
+            {replaceTokens(siteConfig.features.hero.subtitle, { name: restaurantName })}
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
             <Button 
               onClick={onBookTable}
               size="lg" 
-              className={`bg-${primary}-${primaryShade} hover:bg-${primary}-${hover} text-white px-8 py-3 text-lg`}
+              className={`bg-${primary}-${siteConfig.branding.colors.primaryShade} hover:bg-${primary}-${siteConfig.branding.colors.hover} text-white px-8 py-3 text-lg`}
             >
-              {features.hero.ctaText}
+              {siteConfig.features.hero.ctaText}
             </Button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
-            {features.cards.map((card, index) => {
+            {siteConfig.features.cards.map((card, index) => {
               const IconComponent = { Calendar, Users, Clock, Star }[card.icon as keyof typeof import('lucide-react')];
               return (
                 <Card key={index} className="text-center">
                   <CardContent className="pt-6">
-                    {IconComponent && <IconComponent className={`h-8 w-8 text-${primary}-${primaryShade} mx-auto mb-2`} />}
+                    {IconComponent && <IconComponent className={`h-8 w-8 text-${primary}-${siteConfig.branding.colors.primaryShade} mx-auto mb-2`} />}
                     <h3 className="font-semibold text-gray-900">{card.title}</h3>
                     <p className="text-sm text-gray-600">{card.description}</p>
                   </CardContent>

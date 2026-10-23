@@ -5,14 +5,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { fetchTables, fetchAllBookings, getNextReservationForTable, type Table as TableType, type Booking, updateBooking, deleteBooking, createTable, updateTable, deleteTable, placeBooking } from '@/services/supabaseBookingService';
+import { fetchTables, fetchAllBookings, getNextReservationForTable, type Table as TableType, type Booking, updateBooking, deleteBooking, placeBooking, createTable, updateTable, deleteTable } from '@/services/supabaseBookingService';
 import { useAdmin } from '@/hooks/useAdmin';
 import { Dialog, DialogContent, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { fetchRestaurantById, Restaurant } from '@/services/restaurantService';
-import { siteConfig } from '@/config/site';
+import { fetchRestaurants, Restaurant } from '@/services/restaurantService';
 import DashboardRestaurants from '@/components/DashboardRestaurants';
 import BookingTimeline from '@/components/BookingTimeline';
 import BookingModal from '@/components/BookingModal';
+import CRMTestButton from '@/components/CRMTestButton';
+import NewCustomerCRMTestButton from '@/components/NewCustomerCRMTestButton';
+import { rememberOpeningHours } from '@/lib/openingHours';
 
 const AdminDashboard = () => {
   const { isAdmin } = useAdmin();
@@ -20,7 +22,7 @@ const AdminDashboard = () => {
   const [tables, setTables] = useState<TableType[]>([]);
   const [allBookings, setAllBookings] = useState<Booking[]>([]);
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
-  const [selectedRestaurant, setSelectedRestaurant] = useState<string>(siteConfig.ids.restaurantId);
+  const [selectedRestaurant, setSelectedRestaurant] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
@@ -29,31 +31,30 @@ const AdminDashboard = () => {
   const [actionLoading, setActionLoading] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [editError, setEditError] = useState<string | null>(null);
-  const [emailTestResult, setEmailTestResult] = useState<string | null>(null);
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
   const [tableDialog, setTableDialog] = useState<TableType | 'add' | null>(null);
   const [deletingTable, setDeletingTable] = useState<TableType | null>(null);
   const [tableForm, setTableForm] = useState({ name: '', capacity: 2, section: '' });
   const [tableError, setTableError] = useState<string | null>(null);
   const [tableActionLoading, setTableActionLoading] = useState(false);
-  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
       try {
         setLoading(true);
         console.log('Loading admin dashboard data...');
-        const [tablesData, bookingsData, restaurant] = await Promise.all([
+        const [tablesData, bookingsData, restaurantsData] = await Promise.all([
           fetchTables(),
           fetchAllBookings(),
-          fetchRestaurantById(siteConfig.ids.restaurantId)
+          fetchRestaurants()
         ]);
         console.log('Tables loaded:', tablesData);
         console.log('Bookings loaded:', bookingsData);
-        console.log('Restaurant loaded:', restaurant);
+        console.log('Restaurants loaded:', restaurantsData);
         setTables(tablesData);
         setAllBookings(bookingsData);
-        setRestaurants(restaurant ? [restaurant] : []);
-        setSelectedRestaurant(siteConfig.ids.restaurantId);
+        setRestaurants(restaurantsData);
+        if (restaurantsData[0]) rememberOpeningHours(restaurantsData[0].opening_hours);
       } catch (err) {
         console.error('Error loading dashboard data:', err);
         setError('Failed to load dashboard data: ' + (err instanceof Error ? err.message : String(err)));
@@ -79,74 +80,6 @@ const AdminDashboard = () => {
   const getTableStatus = (table: TableType) => {
     const tableBookings = dayBookings.filter(booking => booking.table_id === table.id);
     return tableBookings;
-  };
-
-  const handleAddTableClick = () => {
-    setTableForm({ name: '', capacity: 2, section: '' });
-    setTableError(null);
-    setTableDialog('add');
-  };
-  const handleEditTableClick = (table: TableType) => {
-    setTableForm({ name: table.name, capacity: table.capacity, section: table.section });
-    setTableError(null);
-    setTableDialog(table);
-  };
-  const handleTableFormChange = (field: 'name' | 'section', value: string) => {
-    setTableForm(form => ({ ...form, [field]: value }));
-  };
-  const handleTableSave = async () => {
-    const name = tableForm.name.trim();
-    const section = tableForm.section.trim();
-    const capacity = Number(tableForm.capacity);
-
-    if (!name || !section) {
-      setTableError('Name and section are required.');
-      return;
-    }
-    if (!Number.isInteger(capacity) || capacity < 1) {
-      setTableError('Capacity must be at least 1.');
-      return;
-    }
-
-    setTableActionLoading(true);
-    setTableError(null);
-    try {
-      if (tableDialog === 'add') {
-        await createTable({ name, capacity, section });
-      } else if (tableDialog) {
-        await updateTable(tableDialog.id, { name, capacity, section });
-      }
-      setTables(await fetchTables());
-      setTableDialog(null);
-    } catch (err) {
-      setTableError(err instanceof Error ? err.message : 'Failed to save table.');
-    } finally {
-      setTableActionLoading(false);
-    }
-  };
-  const handleDeleteTableConfirm = async () => {
-    if (!deletingTable) return;
-    setTableActionLoading(true);
-    setTableError(null);
-    try {
-      await deleteTable(deletingTable.id);
-      const [tablesData, bookingsData] = await Promise.all([
-        fetchTables(),
-        fetchAllBookings(),
-      ]);
-      setTables(tablesData);
-      setAllBookings(bookingsData);
-      setDeletingTable(null);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to delete table.';
-      setTableError(
-        message.toLowerCase().includes('foreign key')
-          ? 'Could not delete this table because its bookings are still there. Sign in and try again.'
-          : message
-      );
-    } finally {
-      setTableActionLoading(false);
-    }
   };
 
   const handleEditClick = (booking: Booking) => {
@@ -204,6 +137,91 @@ const AdminDashboard = () => {
   const refreshBookings = async () => {
     const bookingsData = await fetchAllBookings();
     setAllBookings(bookingsData);
+  };
+
+  const tableRestaurantId = () => {
+    if (selectedRestaurant) return selectedRestaurant;
+    const ids = Array.from(new Set(tables.map((table) => table.restaurant_id).filter(Boolean)));
+    return ids.length === 1 ? ids[0] : restaurants[0]?.id;
+  };
+
+  const handleAddTableClick = () => {
+    setTableForm({ name: '', capacity: 2, section: '' });
+    setTableError(null);
+    setTableDialog('add');
+  };
+
+  const handleEditTableClick = (table: TableType) => {
+    setTableForm({ name: table.name, capacity: table.capacity, section: table.section });
+    setTableError(null);
+    setTableDialog(table);
+  };
+
+  const handleTableSave = async () => {
+    const name = tableForm.name.trim();
+    const section = tableForm.section.trim();
+    const capacity = Number(tableForm.capacity);
+
+    if (!name || !section) {
+      setTableError('Name and section are required.');
+      return;
+    }
+    if (!Number.isInteger(capacity) || capacity < 1) {
+      setTableError('Capacity must be at least 1.');
+      return;
+    }
+
+    const restaurantId = tableDialog === 'add' ? tableRestaurantId() : tableDialog?.restaurant_id;
+    const duplicate = tables.some((table) =>
+      table.name.trim().toLowerCase() === name.toLowerCase()
+      && table.id !== (tableDialog === 'add' ? undefined : tableDialog?.id)
+      && (table.restaurant_id || null) === (restaurantId || null)
+    );
+    if (duplicate) {
+      setTableError('A table with this name already exists.');
+      return;
+    }
+
+    if (tableDialog === 'add' && !restaurantId) {
+      setTableError('Choose a restaurant before adding a table.');
+      return;
+    }
+
+    setTableActionLoading(true);
+    setTableError(null);
+    try {
+      if (tableDialog === 'add') {
+        await createTable({ name, capacity, section, restaurantId });
+      } else if (tableDialog) {
+        await updateTable(tableDialog.id, { name, capacity, section });
+      }
+      setTables(await fetchTables());
+      setTableDialog(null);
+    } catch (err) {
+      setTableError(err instanceof Error ? err.message : 'Failed to save table.');
+    } finally {
+      setTableActionLoading(false);
+    }
+  };
+
+  const handleDeleteTableConfirm = async () => {
+    if (!deletingTable) return;
+    setTableActionLoading(true);
+    setTableError(null);
+    try {
+      await deleteTable(deletingTable.id);
+      const [tablesData, bookingsData] = await Promise.all([
+        fetchTables(),
+        fetchAllBookings(),
+      ]);
+      setTables(tablesData);
+      setAllBookings(bookingsData);
+      setDeletingTable(null);
+    } catch (err) {
+      setTableError(err instanceof Error ? err.message : 'Failed to delete table.');
+    } finally {
+      setTableActionLoading(false);
+    }
   };
 
   if (loading) {
@@ -328,6 +346,34 @@ const AdminDashboard = () => {
             await updateBooking(booking.id, update);
             await refreshBookings();
           }}
+          onDuplicateBooking={async (booking, update) => {
+            const [year, month, day] = booking.booking_date.slice(0, 10).split('-').map(Number);
+            const [hours, minutes] = update.start_time.slice(0, 5).split(':').map(Number);
+            const copyDay = new Date(year, (month || 1) - 1, day || 1);
+            const slotOn = (value: Date) => new Date(value.getFullYear(), value.getMonth(), value.getDate(), hours || 0, minutes || 0, 0, 0);
+            while (slotOn(copyDay).getTime() < Date.now()) {
+              copyDay.setDate(copyDay.getDate() + 1);
+            }
+            const date = `${copyDay.getFullYear()}-${String(copyDay.getMonth() + 1).padStart(2, '0')}-${String(copyDay.getDate()).padStart(2, '0')}`;
+            const created = await placeBooking({
+              restaurantId: booking.restaurant_id || undefined,
+              tableId: update.table_id,
+              date,
+              startTime: update.start_time,
+              endTime: update.end_time,
+              partySize: update.party_size,
+              customerName: update.customer_name,
+              customerEmail: update.customer_email,
+              customerPhone: update.customer_phone,
+              specialRequests: update.special_requests,
+            });
+            await refreshBookings();
+            return { id: created.id, date };
+          }}
+          onDeleteBooking={async (booking) => {
+            await deleteBooking(booking.id);
+            await refreshBookings();
+          }}
           onAcceptRequest={async (request, slot) => {
             const [hours, minutes] = slot.time.split(':').map(Number);
             const endTotal = hours * 60 + minutes + request.duration_minutes;
@@ -348,6 +394,14 @@ const AdminDashboard = () => {
           }}
         />
 
+        <div className="bg-white rounded-lg shadow p-6">
+          <h3 className="mb-4 text-lg font-semibold text-gray-700">CRM Integration Test</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <CRMTestButton />
+            <NewCustomerCRMTestButton />
+          </div>
+        </div>
+
         {/* Tables Overview */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card>
@@ -361,9 +415,6 @@ const AdminDashboard = () => {
               </div>
             </CardHeader>
             <CardContent>
-              {tables.length === 0 ? (
-                <p className="text-sm text-gray-500">No tables yet. Add one to start taking bookings.</p>
-              ) : null}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {tables.map(table => {
                   const bookings = getTableStatus(table);
@@ -628,7 +679,7 @@ const AdminDashboard = () => {
               <input
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
                 value={tableForm.name}
-                onChange={e => handleTableFormChange('name', e.target.value)}
+                onChange={e => setTableForm(form => ({ ...form, name: e.target.value }))}
               />
             </div>
             <div>
@@ -646,7 +697,7 @@ const AdminDashboard = () => {
               <input
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
                 value={tableForm.section}
-                onChange={e => handleTableFormChange('section', e.target.value)}
+                onChange={e => setTableForm(form => ({ ...form, section: e.target.value }))}
               />
             </div>
           </div>
@@ -662,9 +713,7 @@ const AdminDashboard = () => {
       <Dialog open={!!deletingTable} onOpenChange={open => { if (!open) setDeletingTable(null); }}>
         <DialogContent>
           <DialogTitle>Delete table</DialogTitle>
-          <p>
-            Delete {deletingTable?.name}? This also removes its bookings.
-          </p>
+          <p>Delete {deletingTable?.name}? This also removes its bookings.</p>
           {tableError && <div className="text-red-600 text-sm mt-2">{tableError}</div>}
           <DialogFooter>
             <Button onClick={() => setDeletingTable(null)} variant="secondary" disabled={tableActionLoading}>Cancel</Button>

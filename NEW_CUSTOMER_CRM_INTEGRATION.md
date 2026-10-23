@@ -1,6 +1,6 @@
 # New Customer CRM Integration Setup
 
-This guide explains how to set up the integration to automatically send new customer data from TablePilotPro to your CRM when a new customer is created.
+This guide explains how to set up the integration to automatically send new customer data from TP Core to your CRM when a new customer is created.
 
 ## Overview
 
@@ -10,8 +10,10 @@ When a new customer is created in the `customers` table (either through a bookin
 
 The system maps business IDs between your main application and CRM:
 
-- **Main App Business ID**: `24e2799f-60d5-4e3b-bb30-b8049c9ae56d` (Amici Coffee)
-- **CRM Business ID**: `9c38d437-b6c9-425a-9199-d514007fcb63`
+- **Main App Business ID**: `your-business-id` (Your Business Name)
+- **CRM Business ID**: `your-crm-business-id`
+
+Update these IDs in the trigger function to match your setup.
 
 ## Setup Steps
 
@@ -21,7 +23,7 @@ Run the new migration to create the customer trigger:
 
 ```bash
 # Navigate to your project directory
-cd tablepilotpro
+cd your-project-directory
 
 # Apply the new migration
 supabase db push
@@ -45,12 +47,12 @@ supabase functions deploy send-customer-to-crm
 
 Ensure these environment variables are set in your Supabase project:
 
-1. Go to your Supabase Dashboard: https://supabase.com/dashboard/project/mxrrvqnfxfigeofbhepv
+1. Go to your Supabase Dashboard: https://supabase.com/dashboard/project/YOUR_PROJECT_REF
 2. Navigate to Settings → Edge Functions
 3. Verify these environment variables are set:
 
 ```
-CRM_ENDPOINT_URL=https://nnxdtpnrwgcknhpyhowr.supabase.co/rest/v1/customers
+CRM_ENDPOINT_URL=https://your-crm-endpoint.com/api/customers
 CRM_API_KEY=your_crm_api_key_here
 ```
 
@@ -76,7 +78,7 @@ INSERT INTO customers (
     last_name,
     phone
 ) VALUES (
-    '24e2799f-60d5-4e3b-bb30-b8049c9ae56d',
+    'your-business-id',
     'test-customer-' || EXTRACT(EPOCH FROM NOW()) || '@example.com',
     'Test',
     'Customer',
@@ -119,11 +121,11 @@ The CRM receives this data structure:
   "booking_time": null,
   "party_size": null,
   "special_requests": "",
-  "source": "tablepilotpro_new_customer",
+  "source": "tp_core_new_customer",
   "booking_id": null,
   "restaurant_id": null,
   "restaurant_name": null,
-  "business_id": "9c38d437-b6c9-425a-9199-d514007fcb63",
+  "business_id": "your-crm-business-id",
   "customer_id": "customer-uuid",
   "external_id": "ext-123",
   "date_of_birth": "1990-01-15",
@@ -243,10 +245,10 @@ To add more business ID mappings, edit the trigger function:
 ```sql
 -- In handle_new_customer_to_crm() function
 CASE NEW.business_id
-    WHEN '24e2799f-60d5-4e3b-bb30-b8049c9ae56d' THEN
-        v_crm_business_id := '9c38d437-b6c9-425a-9199-d514007fcb63';
-    WHEN 'your-business-id' THEN
+    WHEN 'your-main-app-business-id' THEN
         v_crm_business_id := 'your-crm-business-id';
+    WHEN 'another-business-id' THEN
+        v_crm_business_id := 'another-crm-business-id';
     ELSE
         v_crm_business_id := NULL;
 END CASE;

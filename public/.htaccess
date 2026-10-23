@@ -1,5 +1,5 @@
 RewriteEngine On
-RewriteBase /fishydelishy/
+RewriteBase __BASE_PATH__/
 
 RewriteRule ^index\.html$ - [L]
 
@@ -9,8 +9,7 @@ RewriteRule \.(?:css|js|mjs|map|json|png|jpe?g|gif|svg|webp|ico|woff2?|ttf|eot)$
 
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteCond %{REQUEST_FILENAME} !-l
-RewriteRule . /fishydelishy/index.html [L]
+RewriteRule . __BASE_PATH__/index.html [L]
 
 # Enable CORS
 Header set Access-Control-Allow-Origin "*"
@@ -19,7 +18,12 @@ Header set Access-Control-Allow-Headers "Content-Type, Authorization"
 
 # Security headers
 Header set X-Content-Type-Options "nosniff"
-Header set X-Frame-Options "DENY"
+# The booking card and booking form are shown inside the directory.
+# THE_REQUEST stays the same when /embed and /book are rewritten to index.html,
+# so the frame exception is not lost on that rewrite.
+Header always unset X-Frame-Options "expr=%{THE_REQUEST} =~ m#\s__BASE_PATH__/(embed|book)([/?\s]|$)#"
+Header always set Content-Security-Policy "frame-ancestors *" "expr=%{THE_REQUEST} =~ m#\s__BASE_PATH__/(embed|book)([/?\s]|$)#"
+Header always set X-Frame-Options "DENY" "expr=%{THE_REQUEST} !~ m#\s__BASE_PATH__/(embed|book)([/?\s]|$)#"
 Header set X-XSS-Protection "1; mode=block"
 
 # Caching for static assets
@@ -33,11 +37,6 @@ Header set X-XSS-Protection "1; mode=block"
     Header set Pragma "no-cache"
     Header set Expires 0
 </FilesMatch>
-
-# Handle React Router - redirect all requests to index.html except for existing files
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^(.*)$ /fishydelishy/index.html [QSA,L]
 
 # Set correct MIME types for modern web assets
 <IfModule mod_mime.c>

@@ -4,47 +4,51 @@ import { supabase } from '@/integrations/supabase/client';
 
 export const useAdmin = () => {
   const { user } = useAuth();
-  const [userRole, setUserRole] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const userId = user?.id ?? null;
+  const [isAdminUser, setIsAdminUser] = useState(false);
+  const [checkedUserId, setCheckedUserId] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchUserRole = async () => {
-      if (!user) {
-        setUserRole(null);
-        setIsLoading(false);
-        return;
-      }
+    if (!userId) {
+      setIsAdminUser(false);
+      setCheckedUserId(null);
+      return;
+    }
 
+    let cancelled = false;
+
+    const checkAdminStatus = async () => {
       try {
-        const { data, error } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', user.id)
-          .maybeSingle();
+        // Use the tp_is_admin() RPC function which safely checks admin status
+        const { data, error } = await supabase.rpc('tp_is_admin');
+        if (cancelled) return;
 
         if (error) {
-          console.error('Error fetching user role:', error);
-          setUserRole(null);
+          console.error('Error checking admin status:', error);
+          setIsAdminUser(false);
         } else {
-          setUserRole(data?.role || null);
+          setIsAdminUser(data === true);
         }
       } catch (error) {
-        console.error('Error fetching user role:', error);
-        setUserRole(null);
+        if (cancelled) return;
+        console.error('Error checking admin status:', error);
+        setIsAdminUser(false);
       } finally {
-        setIsLoading(false);
+        if (!cancelled) setCheckedUserId(userId);
       }
     };
 
-    fetchUserRole();
-  }, [user]);
+    checkAdminStatus();
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
+
+  const isLoading = Boolean(userId) && checkedUserId !== userId;
 
   const isAdmin = useMemo(() => {
-    if (!user || !userRole) return false;
-    
-    // Check if user has admin role or is the original admin email
-    return userRole === 'admin' || user.email === 'richardhubbert@gmail.com';
-  }, [user, userRole]);
+    return Boolean(userId) && isAdminUser && checkedUserId === userId;
+  }, [userId, isAdminUser, checkedUserId]);
 
-  return { isAdmin, user, userRole, isLoading };
+  return { isAdmin, user, userRole: isAdmin ? 'admin' : 'user', isLoading };
 }; 

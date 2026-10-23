@@ -1,24 +1,40 @@
 /**
- * Site Configuration
- * 
- * This file contains all client-specific configuration for the Table Pilot app.
- * To duplicate this site for a new client:
- * 1. Update the values in this file
- * 2. Replace assets in /public/brand/ folder
- * 3. Update environment variables (see .env.example)
- * 4. Update Supabase configuration
+ * Site configuration shared by every copy.
+ * The restaurant name, id, and public path come from `.env`, which
+ * `npm run new-restaurant` writes and which is not committed.
  */
+
+const configuredName = (import.meta.env.VITE_RESTAURANT_NAME || '').trim();
+const restaurantName = configuredName || 'Your Restaurant';
+const logoText = configuredName
+  .split(/\s+/)
+  .filter(Boolean)
+  .slice(0, 3)
+  .map((part) => part[0]?.toUpperCase() || '')
+  .join('') || 'YR';
+
+const rawBase = (import.meta.env.VITE_BASE_PATH || '/').trim();
+const basePath = rawBase === '' || rawBase === '/'
+  ? '/'
+  : `/${rawBase.replace(/^\/+|\/+$/g, '')}`;
+const productionUrl = basePath === '/'
+  ? 'https://tablepilot.co.uk/'
+  : `https://tablepilot.co.uk${basePath}/`;
 
 export const siteConfig = {
   // ============================================
   // BUSINESS INFORMATION
   // ============================================
   business: {
-    name: "Fishy Delishy",
+    name: restaurantName,
     // Short name/acronym shown in logo badge
-    logoText: "FD",
+    logoText,
     // Optional: tagline or description
-    tagline: "The Best Fish and Chips",
+    tagline: "Restaurant Table Bookings",
+    // Leave blank in this repo. npm run new-restaurant writes a fresh id into .env.
+    restaurantId: "",
+    // This site's row in the shared businesses table. Leave blank to use the restaurant's business.
+    businessId: "",
   },
 
   // ============================================
@@ -28,12 +44,12 @@ export const siteConfig = {
     // Primary brand colors (Tailwind color names)
     // Used for buttons, highlights, and accents throughout the app
     colors: {
-      primary: "blue",      // Main brand color
+      primary: "amber",      // Main brand color (e.g., amber, blue, green)
       primaryShade: "600",   // Default shade (400-900)
       hover: "700",          // Hover state shade
       light: "300",          // Light accent shade
       lighter: "500",        // Badge/icon shade
-      background: "blue",  // Hero background gradient color
+      background: "orange",  // Hero background gradient color
       backgroundShade: "100",
     },
     
@@ -50,45 +66,46 @@ export const siteConfig = {
   // CONTACT & LOCATION
   // ============================================
   contact: {
-    phone: "07973 226393",
-    email: "richardhubbert@gmail.com",
-    address: "15 Sand Lane, Northill",
+    phone: "",  // TODO: Add your phone number (can be overridden per-restaurant in database)
+    email: "hello@example.com",  // TODO: Add your email (can be overridden per-restaurant in database)
+    address: "",  // TODO: Add your address (can be overridden per-restaurant in database)
   },
 
   // ============================================
   // OPERATING HOURS
   // ============================================
   hours: {
-    // TODO: Confirm actual Fishy Delishy hours
-    display: "Daily: 9:00 AM - 11:00 PM",
-    lastBooking: "10:00 PM",  // TODO: Confirm last booking time
-    // Optional: Add structured hours for future use
-    // schedule: {
-    //   monday: { open: "09:00", close: "23:00" },
-    //   tuesday: { open: "09:00", close: "23:00" },
-    //   ...
-    // }
+    display: "Daily: 11:00 AM - 10:00 PM",
+    lastBooking: "7:30 PM",
+    opening: "11:00",
+    closing: "22:00",
+    lastBookingTime: "19:30",
+    slotInterval: 30,
+  },
+
+  restaurant: {
+    defaultId: "",
   },
 
   // ============================================
   // SEO & META TAGS
   // ============================================
   seo: {
-    title: "Fishy Delishy - Fish and Chips Table Bookings in Northill",
-    description: "Book your table at Fishy Delishy in Northill. The best fish and chips with easy online table reservations.",
-    keywords: "fish and chips, restaurant, booking, table reservation, northill, fishy delishy",
-    author: "Fishy Delishy",
+    title: restaurantName,
+    description: `Book a table at ${restaurantName}. Choose your date, time, and party size.`,
+    keywords: "restaurant, booking, table reservation, dining",
+    author: restaurantName,
     
     // Open Graph (Facebook, LinkedIn, etc.)
     og: {
       type: "website",
-      image: "https://lovable.dev/opengraph-image-p98pqg.png",
+      image: "/brand/og-image.png", // TODO: Add your social share image to public/brand/
     },
     
     // Twitter
     twitter: {
       card: "summary_large_image",
-      site: "@tablepilot",  // Twitter handle
+      site: "@yourhandle",  // TODO: Update with your Twitter/X handle
     },
   },
 
@@ -98,10 +115,10 @@ export const siteConfig = {
   urls: {
     // Production domain (without protocol)
     domain: "tablepilot.co.uk",
-    // Base path for the app
-    basePath: "/fishydelishy",
+    // Base path for the app. npm run new-restaurant sets this from the restaurant name.
+    basePath,
     // Full production URL
-    productionUrl: "https://tablepilot.co.uk/fishydelishy/",
+    productionUrl,
   },
 
   // ============================================
@@ -111,7 +128,7 @@ export const siteConfig = {
     // Hero section copy
     hero: {
       welcome: "Welcome to",  // "Welcome to {business.name}"
-      subtitle: "Experience the finest fish and chips in Northill. Book your table today and enjoy our traditional recipes and fresh, locally-sourced ingredients.",
+      subtitle: "Choose your date, time, and party size.",
       ctaText: "Book a Table",
     },
     
@@ -152,30 +169,8 @@ export const siteConfig = {
   email: {
     // Default "from" name for booking confirmations
     // Actual email address is set in Supabase secrets (RESEND_FROM)
-    fromName: "Fishy Delishy",
-    defaultFromEmail: "onboarding@resend.dev",  // Fallback only
-  },
-
-  // ============================================
-  // DATABASE IDS (Client-specific)
-  // ============================================
-  ids: {
-    // Shared bookings table. This site's rows are the ones with these ids.
-    businessId: "9da1ed04-cb17-4428-82fd-396113775bdf",
-    restaurantId: "9da1ed04-cb17-4428-82fd-396113775bdf",
-    slug: "fishydelishy",
-  },
-
-  // ============================================
-  // INTEGRATIONS (Client-specific)
-  // ============================================
-  integrations: {
-    elevenlabs: {
-      // TODO: Replace with Fishy Delishy's ElevenLabs agent ID
-      // Currently using Amici Coffee's agent ID - needs updating
-      agentId: "hFhNyzsEj0QwywLVdOEQ",
-      enabled: false,  // Disabled until Fishy Delishy agent is set up
-    },
+    fromName: restaurantName,
+    defaultFromEmail: "onboarding@resend.dev",  // Fallback only (use your verified domain in production)
   },
 } as const;
 

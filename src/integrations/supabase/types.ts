@@ -34,6 +34,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      booking_alerts: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          party_size: number | null
+          requested_date: string | null
+          requested_time: string | null
+          restaurant_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          party_size?: number | null
+          requested_date?: string | null
+          requested_time?: string | null
+          restaurant_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          party_size?: number | null
+          requested_date?: string | null
+          requested_time?: string | null
+          restaurant_id?: string | null
+        }
+        Relationships: []
+      }
       bookings: {
         Row: {
           booking_date: string
@@ -403,6 +433,7 @@ export type Database = {
           created_at: string | null
           id: string
           name: string
+          restaurant_id: string | null
           section: string
           updated_at: string | null
         }
@@ -411,6 +442,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           name: string
+          restaurant_id?: string | null
           section: string
           updated_at?: string | null
         }
@@ -419,6 +451,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           name?: string
+          restaurant_id?: string | null
           section?: string
           updated_at?: string | null
         }

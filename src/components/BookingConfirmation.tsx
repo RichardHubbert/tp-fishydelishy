@@ -4,14 +4,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle, Calendar, Clock, Users, Mail, Phone, MessageSquare, MapPin } from 'lucide-react';
 import { format, parseISO, addMinutes } from 'date-fns';
 import { BookingData } from '@/components/BookingModal';
-import { siteConfig } from '@/config/site';
 
 interface BookingConfirmationProps {
   bookingData: BookingData;
+  restaurantName?: string;
   onClose: () => void;
 }
 
-const BookingConfirmation: React.FC<BookingConfirmationProps> = ({ bookingData, onClose }) => {
+const BookingConfirmation: React.FC<BookingConfirmationProps> = ({ bookingData, restaurantName, onClose }) => {
   const formatTime = (time: string) => {
     const [hours, minutes] = time.split(':');
     const timeObj = new Date();
@@ -96,7 +96,7 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({ bookingData, 
               <MapPin className="h-5 w-5 text-green-600" />
               <div>
                 <p className="font-medium text-green-800">Location</p>
-                <p className="text-green-700">{siteConfig.business.name}</p>
+                <p className="text-green-700">{restaurantName || 'Your Restaurant'}</p>
               </div>
             </div>
           </div>
